@@ -26,7 +26,7 @@
 | --- | --- | --- | --- |
 | Day 1 | Next.js 基础与 App Router（应用路由） | 已完成 | [查看 Day 1](./day-01-nextjs-and-app-router.md) |
 | Day 2 | TypeScript（类型化 JavaScript）、Component（组件）与 Props（组件参数） | 已完成 | [查看 Day 2](./day-02-components-and-props.md) |
-| Day 3 | 首页 | 进行中 | [查看 Day 3](./day-03-homepage.md) |
+| Day 3 | 首页 | 已完成 | [查看 Day 3](./day-03-homepage.md) |
 | Day 4 | Responsive Design（响应式设计）与 UI（用户界面） | 未开始 | 完成学习后创建 |
 | Day 5 | 基础数据模型 | 未开始 | 完成学习后创建 |
 | Day 6 | Projects（项目）列表 | 未开始 | 完成学习后创建 |
