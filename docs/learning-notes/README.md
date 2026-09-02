@@ -29,8 +29,8 @@
 | Day 3 | 首页 | 已完成 | [查看 Day 3](./day-03-homepage.md) |
 | Day 4 | CSS、Flexbox、Grid 与 Responsive Design（响应式设计） | 已完成 | [查看 Day 4](./day-04-css-responsive-design.md) |
 | Day 5 | TypeScript 数据模型与数据驱动页面 | 已完成 | [查看 Day 5](./day-05-data-models.md) |
-| Day 6 | Projects 列表与项目卡片设计 | 进行中 | [查看 Day 6](./day-06-projects-list.md) |
-| Day 7 | Project Detail（项目详情）与 Dynamic Route（动态路由） | 未开始 | 完成学习后创建 |
+| Day 6 | Projects 列表与项目卡片设计 | 已完成 | [查看 Day 6](./day-06-projects-list.md) |
+| Day 7 | Project Detail（项目详情）与 Dynamic Route（动态路由） | 进行中 | [查看 Day 7](./day-07-project-detail-dynamic-route.md) |
 | Day 8 | Tools（工具集） | 未开始 | 完成学习后创建 |
 | Day 9 | Database（数据库）基础 | 未开始 | 完成学习后创建 |
 | Day 10 | Prisma（数据库 ORM 工具）与 Database（数据库） | 未开始 | 完成学习后创建 |

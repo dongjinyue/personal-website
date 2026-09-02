@@ -21,9 +21,11 @@ export default function ToolCard({
       <Heading className={styles.title}>{name}</Heading>
       <p className={styles.description}>{description}</p>
 
-      <a className={styles.action} href={url} target="_blank" rel="noreferrer">
-        打开工具
-      </a>
+      <div className={styles.actions}>
+        <a className={styles.action} href={url} target="_blank" rel="noreferrer">
+          打开工具
+        </a>
+      </div>
     </article>
   );
 }
