@@ -1,10 +1,13 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ProjectStatus } from "@/data/projects";
+import { projectStatusLabels } from "@/lib/project-status";
 import styles from "./Card.module.css";
 
 type ProjectCardProps = {
   title: string;
   description: string;
+  slug?: string;
   status?: ProjectStatus;
   tags?: string[];
   coverImage?: string;
@@ -13,15 +16,10 @@ type ProjectCardProps = {
   headingLevel?: "h2" | "h3";
 };
 
-const statusLabels: Record<ProjectStatus, string> = {
-  building: "开发中",
-  completed: "已完成",
-  paused: "已暂停",
-};
-
 export default function ProjectCard({
   title,
   description,
+  slug,
   status,
   tags,
   coverImage,
@@ -30,14 +28,14 @@ export default function ProjectCard({
   headingLevel = "h2",
 }: ProjectCardProps) {
   // 首页只传基础信息；列表页传入完整数据后才显示封面和元信息。
-  const showsDetails = Boolean(
+  const showsCover = Boolean(
     status || tags?.length || coverImage || projectUrl || githubUrl,
   );
   const Heading = headingLevel;
 
   return (
     <article className={styles.card}>
-      {showsDetails && (
+      {showsCover && (
         <div className={styles.cover}>
           {coverImage ? (
             <Image
@@ -54,7 +52,7 @@ export default function ProjectCard({
         </div>
       )}
 
-      {status && <p className={styles.status}>{statusLabels[status]}</p>}
+      {status && <p className={styles.status}>{projectStatusLabels[status]}</p>}
       <Heading className={styles.title}>{title}</Heading>
       <p className={styles.description}>{description}</p>
 
@@ -66,8 +64,13 @@ export default function ProjectCard({
         </ul>
       )}
 
-      {(githubUrl || projectUrl) && (
+      {(slug || githubUrl || projectUrl) && (
         <div className={styles.actions}>
+          {slug && (
+            <Link className={styles.action} href={`/projects/${slug}`}>
+              查看详情
+            </Link>
+          )}
           {githubUrl && (
             <a className={styles.action} href={githubUrl} target="_blank" rel="noreferrer">
               查看 GitHub

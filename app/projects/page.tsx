@@ -18,6 +18,7 @@ export default function ProjectsPage() {
           {visibleProjects.map((project) => (
             <ProjectCard
               key={project.id}
+              slug={project.slug}
               title={project.name}
               description={project.description}
               status={project.status}

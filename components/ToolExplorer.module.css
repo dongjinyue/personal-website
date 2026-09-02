@@ -1,0 +1,172 @@
+.explorer {
+  margin-top: 52px;
+}
+
+.controls {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.searchRow {
+  position: relative;
+  max-width: 680px;
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 52px 0 16px;
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--background);
+  font: inherit;
+}
+
+.input::placeholder {
+  color: var(--muted);
+}
+
+.input:focus-visible,
+.clearButton:focus-visible,
+.filterButton:focus-visible,
+.resetButton:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  outline-offset: 3px;
+}
+
+.input:focus-visible {
+  border-color: var(--accent);
+}
+
+.clearButton {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--muted);
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.clearButton:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.filterButton,
+.resetButton {
+  min-height: 42px;
+  padding: 0 16px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filterButton:hover,
+.resetButton:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.filterButton[aria-pressed="true"] {
+  color: var(--surface);
+  border-color: var(--foreground);
+  background: var(--foreground);
+}
+
+.resultCount {
+  min-height: 1.5em;
+  margin: 24px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.emptyState {
+  margin-top: 18px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.emptyState h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 1.3rem;
+}
+
+.emptyState p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.resetButton {
+  margin-top: 22px;
+}
+
+@media (max-width: 600px) {
+  .explorer {
+    margin-top: 38px;
+  }
+
+  .controls {
+    padding: 18px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterButton {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .clearButton,
+  .filterButton,
+  .resetButton {
+    transition: none;
+  }
+}

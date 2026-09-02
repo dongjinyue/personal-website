@@ -76,6 +76,7 @@ export default function HomePage() {
           {featuredProjects.map((project) => (
             <ProjectCard
               key={project.id}
+              slug={project.slug}
               title={project.name}
               description={project.description}
               headingLevel="h3"

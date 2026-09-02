@@ -1,4 +1,4 @@
-import ToolCard from "@/components/ToolCard";
+import ToolExplorer from "@/components/ToolExplorer";
 import { tools } from "@/data/tools";
 import styles from "../collection.module.css";
 
@@ -11,16 +11,7 @@ export default function ToolsPage() {
         <p className={styles.intro}>收藏开发、学习和日常工作中反复使用的实用工具。</p>
       </header>
 
-      <section className={styles.grid} aria-label="工具列表">
-        {tools.map((tool) => (
-          <ToolCard
-            key={tool.id}
-            name={tool.name}
-            description={tool.description}
-            url={tool.url}
-          />
-        ))}
-      </section>
+      <ToolExplorer tools={tools} />
     </main>
   );
 }

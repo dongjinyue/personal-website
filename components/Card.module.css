@@ -41,6 +41,22 @@
   letter-spacing: 0.12em;
 }
 
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font: 700 0.68rem/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.meta span + span::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--line);
+}
+
 .title {
   margin: 0;
   color: var(--foreground);
