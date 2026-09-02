@@ -1,3 +1,5 @@
+import styles from "./Card.module.css";
+
 type ProjectCardProps = {
   title: string;
   description: string;
@@ -13,9 +15,9 @@ export default function ProjectCard({
   const Heading = headingLevel;
 
   return (
-    <article>
-      <Heading>{title}</Heading>
-      <p>{description}</p>
+    <article className={styles.card}>
+      <Heading className={styles.title}>{title}</Heading>
+      <p className={styles.description}>{description}</p>
     </article>
   );
 }

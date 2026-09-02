@@ -27,9 +27,9 @@
 | Day 1 | Next.js 基础与 App Router（应用路由） | 已完成 | [查看 Day 1](./day-01-nextjs-and-app-router.md) |
 | Day 2 | TypeScript（类型化 JavaScript）、Component（组件）与 Props（组件参数） | 已完成 | [查看 Day 2](./day-02-components-and-props.md) |
 | Day 3 | 首页 | 已完成 | [查看 Day 3](./day-03-homepage.md) |
-| Day 4 | Responsive Design（响应式设计）与 UI（用户界面） | 未开始 | 完成学习后创建 |
-| Day 5 | 基础数据模型 | 未开始 | 完成学习后创建 |
-| Day 6 | Projects（项目）列表 | 未开始 | 完成学习后创建 |
+| Day 4 | CSS、Flexbox、Grid 与 Responsive Design（响应式设计） | 已完成 | [查看 Day 4](./day-04-css-responsive-design.md) |
+| Day 5 | TypeScript 数据模型与数据驱动页面 | 已完成 | [查看 Day 5](./day-05-data-models.md) |
+| Day 6 | Projects 列表与项目卡片设计 | 进行中 | [查看 Day 6](./day-06-projects-list.md) |
 | Day 7 | Project Detail（项目详情）与 Dynamic Route（动态路由） | 未开始 | 完成学习后创建 |
 | Day 8 | Tools（工具集） | 未开始 | 完成学习后创建 |
 | Day 9 | Database（数据库）基础 | 未开始 | 完成学习后创建 |

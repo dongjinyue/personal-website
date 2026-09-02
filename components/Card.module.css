@@ -1,0 +1,51 @@
+.card {
+  min-width: 0;
+  min-height: 178px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 1.28rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.action {
+  display: inline-flex;
+  margin-top: 24px;
+  padding: 8px 0;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.action:hover {
+  text-decoration-thickness: 2px;
+}
+
+.action:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+
+@media (max-width: 600px) {
+  .card {
+    min-height: auto;
+    padding: 24px;
+  }
+}

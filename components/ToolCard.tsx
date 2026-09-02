@@ -1,3 +1,5 @@
+import styles from "./Card.module.css";
+
 type ToolCardProps = {
   name: string;
   description: string;
@@ -15,11 +17,11 @@ export default function ToolCard({
   const Heading = headingLevel;
 
   return (
-    <article>
-      <Heading>{name}</Heading>
-      <p>{description}</p>
+    <article className={styles.card}>
+      <Heading className={styles.title}>{name}</Heading>
+      <p className={styles.description}>{description}</p>
 
-      <a href={url} target="_blank" rel="noreferrer">
+      <a className={styles.action} href={url} target="_blank" rel="noreferrer">
         打开工具
       </a>
     </article>

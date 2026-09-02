@@ -1,7 +1,17 @@
 import Link from "next/link";
 import ProjectCard from "@/components/ProjectCard";
 import ToolCard from "@/components/ToolCard";
+import { projects } from "@/data/projects";
+import { tools } from "@/data/tools";
 import styles from "./page.module.css";
+
+const featuredProjects = projects
+  .filter((project) => project.isFeatured)
+  .slice(0, 2);
+
+const favoriteTools = tools
+  .filter((tool) => tool.isFavorite)
+  .slice(0, 2);
 
 const quickLinks = [
   { href: "/projects", title: "项目中心", description: "查看正在推进与已经完成的个人项目。", meta: "PROJECTS", icon: "folder" },
@@ -63,8 +73,14 @@ export default function HomePage() {
           <Link href="/projects">查看全部项目 <span aria-hidden="true">→</span></Link>
         </div>
         <div className={styles.contentGrid}>
-          <ProjectCard title="AI Workspace Agent" description="集成知识库、RAG、Agent 和 MCP 的 AI 工作空间。" headingLevel="h3" />
-          <ProjectCard title="Personal Website" description="用于管理个人项目、常用工具和内容的长期数字空间。" headingLevel="h3" />
+          {featuredProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              title={project.name}
+              description={project.description}
+              headingLevel="h3"
+            />
+          ))}
         </div>
       </section>
 
@@ -77,8 +93,15 @@ export default function HomePage() {
           <Link href="/tools">查看全部工具 <span aria-hidden="true">→</span></Link>
         </div>
         <div className={styles.contentGrid}>
-          <ToolCard name="GitHub" description="用于保存代码、管理版本和协作开发。" url="https://github.com" headingLevel="h3" />
-          <ToolCard name="ChatGPT" description="用于学习、思考和辅助项目开发。" url="https://chatgpt.com" headingLevel="h3" />
+          {favoriteTools.map((tool) => (
+            <ToolCard
+              key={tool.id}
+              name={tool.name}
+              description={tool.description}
+              url={tool.url}
+              headingLevel="h3"
+            />
+          ))}
         </div>
       </section>
     </main>

@@ -2,7 +2,13 @@
 
 :root {
   --background: #f8f9fc;
+  --surface: #ffffff;
   --foreground: #172036;
+  --muted: #637089;
+  --line: #dce2eb;
+  --accent: #5d63e7;
+  --accent-soft: #eef0ff;
+  --content-width: 1180px;
 }
 
 @theme inline {
@@ -21,10 +27,36 @@ body {
   scrollbar-width: thin;
 }
 
-* { box-sizing: border-box; }
-::selection { color: #fff; background: #5d63e7; }
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #eef0f5; }
-::-webkit-scrollbar-thumb { border: 2px solid #eef0f5; border-radius: 999px; background: #aab2c3; }
-::-webkit-scrollbar-thumb:hover { background: #8993a8; }
-@media (forced-colors: active) { body { scrollbar-color: auto; } }
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  color: var(--surface);
+  background: var(--accent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eef0f5;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #eef0f5;
+  border-radius: 999px;
+  background: #aab2c3;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8993a8;
+}
+
+@media (forced-colors: active) {
+  body {
+    scrollbar-color: auto;
+  }
+}
