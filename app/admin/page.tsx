@@ -1,24 +1,33 @@
 import type { Metadata } from "next";
-import LogoutButton from "@/components/LogoutButton";
-import { requireAdmin } from "@/lib/auth/admin";
-import styles from "@/app/auth.module.css";
+import Link from "next/link";
+import StatCard from "@/components/admin/StatCard";
+import AdminPreview from "@/components/admin/AdminPreview";
+import { getAdminMetrics, getAdminPreview } from "@/lib/admin-repository";
+import styles from "./admin.module.css";
 
-export const metadata: Metadata = {
-  title: "管理入口",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: "概览" };
 
 export default async function AdminPage() {
-  // 在读取或显示后台内容之前完成授权。
-  const user = await requireAdmin();
+  // 两个查询函数都带管理员验证，不依赖布局执行时序。
+  const [metrics, tools] = await Promise.all([
+    getAdminMetrics(),
+    getAdminPreview("tools"),
+  ]);
 
   return (
-    <main className={styles.panel}>
-      <h1>管理入口</h1>
-      <p>你已通过管理员验证。</p>
-      <p className={styles.hint}>当前账号：{user.email}</p>
-      <p>今天只验证身份；工具和项目管理会在后续课程实现。</p>
-      <LogoutButton />
-    </main>
+    <section className={styles.stack} aria-labelledby="overview-title">
+      <header>
+        <h1 className={styles.heading} id="overview-title">内容概览</h1>
+        <p className={styles.hint}>查看当前内容数量与最近更新。今天仅开放只读预览。</p>
+      </header>
+      <div className={styles.stats}>
+        {metrics.map((metric) => <StatCard key={metric.id} {...metric} />)}
+      </div>
+      <section className={styles.panel} aria-labelledby="recent-tools-title">
+        <h2 id="recent-tools-title">最近更新的工具</h2>
+        <AdminPreview result={tools} label="工具" />
+        <p><Link className={styles.link} href="/admin/tools">前往工具预览</Link></p>
+      </section>
+    </section>
   );
 }
