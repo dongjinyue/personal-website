@@ -1,13 +1,12 @@
 import Link from "next/link";
 import ProjectCard from "@/components/ProjectCard";
 import ToolCard from "@/components/ToolCard";
-import { projects } from "@/data/projects";
 import { tools } from "@/data/tools";
+import { getFeaturedPublicProjects } from "@/lib/project-repository";
 import styles from "./page.module.css";
 
-const featuredProjects = projects
-  .filter((project) => project.isFeatured)
-  .slice(0, 2);
+// 公开数据每次请求都以访客身份读取，避免构建时固化可见性结果。
+export const dynamic = "force-dynamic";
 
 const favoriteTools = tools
   .filter((tool) => tool.isFavorite)
@@ -25,7 +24,8 @@ function QuickLinkIcon({ type }: { type: (typeof quickLinks)[number]["icon"] }) 
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.25" /><rect x="14" y="4" width="6" height="6" rx="1.25" /><rect x="4" y="14" width="6" height="6" rx="1.25" /><rect x="14" y="14" width="6" height="6" rx="1.25" /></svg>;
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredProjects = await getFeaturedPublicProjects();
   return (
     <main className={styles.page}>
       <section className={styles.hero} aria-labelledby="hero-title">
@@ -73,6 +73,7 @@ export default function HomePage() {
           <Link href="/projects">查看全部项目 <span aria-hidden="true">→</span></Link>
         </div>
         <div className={styles.contentGrid}>
+          {featuredProjects.length === 0 && <p>暂无公开推荐项目。</p>}
           {featuredProjects.map((project) => (
             <ProjectCard
               key={project.id}

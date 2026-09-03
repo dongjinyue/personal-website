@@ -61,6 +61,27 @@
   line-height: 1.7;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  color: var(--muted);
+}
+
+.pagination a,
+.pagination span[aria-disabled="true"] {
+  min-width: 6rem;
+  padding: 0.65rem 1rem;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+
+.pagination a { color: var(--accent); }
+.pagination span[aria-disabled="true"] { opacity: 0.55; }
+
 @media (max-width: 600px) {
   .page {
     width: min(100% - 28px, var(--content-width));

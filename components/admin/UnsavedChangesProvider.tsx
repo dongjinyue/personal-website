@@ -20,7 +20,7 @@ export function useUnsavedChanges() {
   return value;
 }
 
-/** 统一管理工具表单的未保存状态和显式离开入口。 */
+/** 统一管理后台表单的未保存状态和显式离开入口。 */
 export default function UnsavedChangesProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [formState, setFormState] = useState({ dirty: false, pending: false });

@@ -18,7 +18,7 @@ export default async function AdminPage() {
     <section className={styles.stack} aria-labelledby="overview-title">
       <header>
         <h1 className={styles.heading} id="overview-title">内容概览</h1>
-        <p className={styles.hint}>查看当前内容数量与最近更新；工具现已支持管理。</p>
+        <p className={styles.hint}>查看当前内容数量与最近更新；工具和项目均已支持管理。</p>
       </header>
       <div className={styles.stats}>
         {metrics.map((metric) => <StatCard key={metric.id} {...metric} />)}

@@ -7,7 +7,7 @@ import styles from "@/app/admin/admin.module.css";
 const links = [
   { href: "/admin", label: "概览" },
   { href: "/admin/tools", label: "工具管理" },
-  { href: "/admin/projects", label: "项目预览" },
+  { href: "/admin/projects", label: "项目管理" },
 ];
 
 export default function AdminNav() {

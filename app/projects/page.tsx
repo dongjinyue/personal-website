@@ -1,39 +1,60 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import ProjectCard from "@/components/ProjectCard";
-import { projects } from "@/data/projects";
+import { getPublicProjectsPage } from "@/lib/project-repository";
 import styles from "../collection.module.css";
 
-const visibleProjects = projects;
+export const metadata: Metadata = {
+  title: "项目",
+  description: "查看我正在构建和已经完成的公开项目。",
+};
 
-export default function ProjectsPage() {
+export const dynamic = "force-dynamic";
+
+type Props = { searchParams: Promise<{ page?: string | string[] }> };
+
+export default async function ProjectsPage({ searchParams }: Props) {
+  const query = await searchParams;
+  const rawPage = typeof query.page === "string" ? query.page : undefined;
+  const result = await getPublicProjectsPage(rawPage);
+
+  if (rawPage !== String(result.page)) redirect(`/projects?page=${result.page}`);
+  if (result.projects.length === 0 && result.page > 1) {
+    redirect(`/projects?page=${result.page - 1}`);
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.heading}>
         <p className={styles.eyebrow}>PROJECTS</p>
-        <h1>我的项目</h1>
-        <p className={styles.intro}>整理正在推进和已经完成的项目，记录每一次构建与迭代。</p>
+        <h1>项目</h1>
+        <p className={styles.intro}>记录正在构建、已经完成和持续打磨的公开作品。</p>
       </header>
 
-      {visibleProjects.length > 0 ? (
-        <section className={styles.grid} aria-label="项目列表">
-          {visibleProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              slug={project.slug}
-              title={project.name}
-              description={project.description}
-              status={project.status}
-              tags={project.tags}
-              coverImage={project.coverImage}
-              projectUrl={project.projectUrl}
-              githubUrl={project.githubUrl}
-            />
-          ))}
+      {result.projects.length === 0 ? (
+        <section className={styles.emptyState}>
+          <h2>暂时没有公开项目</h2>
+          <p>项目准备好后会出现在这里。</p>
         </section>
       ) : (
-        <section className={styles.emptyState}>
-          <h2>还没有项目</h2>
-          <p>完成第一个项目后，它会显示在这里。</p>
-        </section>
+        <>
+          <section className={styles.grid} aria-label={`公开项目，共 ${result.total} 个`}>
+            {result.projects.map((project) => (
+              <ProjectCard key={project.id} title={project.name}
+                description={project.description} slug={project.slug}
+                status={project.status} tags={project.tags}
+                projectUrl={project.projectUrl} githubUrl={project.githubUrl} />
+            ))}
+          </section>
+          <nav className={styles.pagination} aria-label="项目列表分页">
+            {result.page > 1 ? <Link href={`/projects?page=${result.page - 1}`}>上一页</Link>
+              : <span aria-disabled="true">上一页</span>}
+            <span>第 {result.page}/{result.pages} 页</span>
+            {result.page < result.pages ? <Link href={`/projects?page=${result.page + 1}`}>下一页</Link>
+              : <span aria-disabled="true">下一页</span>}
+          </nav>
+        </>
       )}
     </main>
   );
