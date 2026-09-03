@@ -38,8 +38,8 @@
 | Day 12 | Dashboard（管理后台）、共享布局与真实数据概览 | 主体完成，待补充验收 | [查看 Day 12](./day-12-admin-dashboard.md) |
 | Day 13 | Tools CRUD（工具增删改查） | 用户完成，静态检查通过，待运行验收 | [查看 Day 13](./day-13-tools-crud.md) |
 | Day 14 | Projects CRUD（项目增删改查）与公开/私有 | 用户完成，静态检查与对照构建通过，待权限运行验收 | [查看 Day 14](./day-14-projects-and-visibility.md) |
-| Day 15 | Build（构建）与 Deployment（部署） | 进行中 | [查看 Day 15](./day-15-build-and-deployment.md) |
-| Day 16 | Domain（域名）、DNS（域名解析）与最终验收 | 未开始 | 完成学习后创建 |
+| Day 15 | Build（构建）与 Deployment（部署） | 已部署，用户反馈基础验收通过；详细权限结果待记录 | [查看 Day 15](./day-15-build-and-deployment.md) |
+| Day 16 | Domain（域名）、DNS（域名解析）与最终验收 | 路线 A 已完成，身份与交互未测项已记录 | [查看 Day 16](./day-16-domains-dns-and-final-review.md) |
 
 ## 每日文档固定结构
 
