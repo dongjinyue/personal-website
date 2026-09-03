@@ -33,7 +33,7 @@
 | Day 7 | Project Detail（项目详情）与 Dynamic Route（动态路由） | 已完成 | [查看 Day 7](./day-07-project-detail-dynamic-route.md) |
 | Day 8 | Tools（工具集）、Client Component（客户端组件）与搜索筛选 | 已完成 | [查看 Day 8](./day-08-tools-search-and-filter.md) |
 | Day 9 | Database（数据库）基础、SQL（结构化查询语言）与数据建模 | 已完成 | [查看 Day 9](./day-09-database-and-sql-basics.md) |
-| Day 10 | Prisma ORM（数据库对象关系映射）、SQLite 与 Migration（迁移） | 进行中 | [查看 Day 10](./day-10-prisma-sqlite-migrations.md) |
+| Day 10 | Supabase、PostgreSQL、Migration（迁移）与 RLS（行级安全） | 已完成 | [查看 Day 10](./day-10-supabase-postgresql.md) |
 | Day 11 | 管理员登录 | 未开始 | 完成学习后创建 |
 | Day 12 | Dashboard（管理后台） | 未开始 | 完成学习后创建 |
 | Day 13 | Tools CRUD（工具增删改查） | 未开始 | 完成学习后创建 |
@@ -52,3 +52,8 @@
 5. 自测题；
 6. 当天验收清单；
 7. 一句话总结。
+
+## 专题教材
+
+- [Next.js 从零入门：结合个人网站理解全栈开发](./nextjs-beginner-guide.md)
+- [Supabase 从零入门：给个人网站项目的基础教材](./supabase-beginner-guide.md)
