@@ -18,7 +18,7 @@ export default async function AdminPage() {
     <section className={styles.stack} aria-labelledby="overview-title">
       <header>
         <h1 className={styles.heading} id="overview-title">内容概览</h1>
-        <p className={styles.hint}>查看当前内容数量与最近更新。今天仅开放只读预览。</p>
+        <p className={styles.hint}>查看当前内容数量与最近更新；工具现已支持管理。</p>
       </header>
       <div className={styles.stats}>
         {metrics.map((metric) => <StatCard key={metric.id} {...metric} />)}
@@ -26,7 +26,7 @@ export default async function AdminPage() {
       <section className={styles.panel} aria-labelledby="recent-tools-title">
         <h2 id="recent-tools-title">最近更新的工具</h2>
         <AdminPreview result={tools} label="工具" />
-        <p><Link className={styles.link} href="/admin/tools">前往工具预览</Link></p>
+        <p><Link className={styles.link} href="/admin/tools">前往工具管理</Link></p>
       </section>
     </section>
   );

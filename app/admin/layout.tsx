@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import GuardedLink from "@/components/admin/GuardedLink";
 import AdminNav from "@/components/admin/AdminNav";
 import RefreshButton from "@/components/admin/RefreshButton";
 import LogoutButton from "@/components/LogoutButton";
@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <h2>管理后台</h2>
         <p className={styles.hint}>个人内容工作台</p>
         <AdminNav />
-        <Link className={styles.link} href="/">返回公开网站</Link>
+        <GuardedLink className={styles.link} href="/">返回公开网站</GuardedLink>
       </aside>
       <div className={styles.workspace}>
         <header className={styles.toolbar}>

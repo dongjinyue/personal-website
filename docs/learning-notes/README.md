@@ -36,8 +36,8 @@
 | Day 10 | Supabase、PostgreSQL、Migration（迁移）与 RLS（行级安全） | 已完成 | [查看 Day 10](./day-10-supabase-postgresql.md) |
 | Day 11 | 管理员登录、会话与访问权限 | 主体完成，待补充验收 | [查看 Day 11](./day-11-admin-auth-and-session.md) |
 | Day 12 | Dashboard（管理后台）、共享布局与真实数据概览 | 主体完成，待补充验收 | [查看 Day 12](./day-12-admin-dashboard.md) |
-| Day 13 | Tools CRUD（工具增删改查） | 进行中 | [查看 Day 13](./day-13-tools-crud.md) |
-| Day 14 | Projects CRUD（项目增删改查）与公开/私有 | 未开始 | 完成学习后创建 |
+| Day 13 | Tools CRUD（工具增删改查） | 用户完成，静态检查通过，待运行验收 | [查看 Day 13](./day-13-tools-crud.md) |
+| Day 14 | Projects CRUD（项目增删改查）与公开/私有 | 进行中 | [查看 Day 14](./day-14-projects-and-visibility.md) |
 | Day 15 | Build（构建）与 Deployment（部署） | 未开始 | 完成学习后创建 |
 | Day 16 | Domain（域名）、DNS（域名解析）与最终验收 | 未开始 | 完成学习后创建 |
 

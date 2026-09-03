@@ -1,15 +1,15 @@
-import Link from "next/link";
+import GuardedLink from "@/components/admin/GuardedLink";
 import styles from "./Header.module.css";
 
 export default function Header() {
   return (
     <header className={styles.header}>
       <nav className={styles.navigation} aria-label="主要导航">
-        <Link className={styles.brand} href="/">MY SPACE</Link>
+        <GuardedLink className={styles.brand} href="/">MY SPACE</GuardedLink>
         <div className={styles.links}>
-          <Link href="/">首页</Link>
-          <Link href="/projects">项目</Link>
-          <Link href="/tools">工具集</Link>
+          <GuardedLink href="/">首页</GuardedLink>
+          <GuardedLink href="/projects">项目</GuardedLink>
+          <GuardedLink href="/tools">工具集</GuardedLink>
         </div>
       </nav>
     </header>

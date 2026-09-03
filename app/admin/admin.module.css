@@ -186,10 +186,226 @@
 .navLink:focus-visible,
 .link:focus-visible,
 .button:focus-visible,
+.buttonLink:focus-visible,
+.deleteTrigger:focus-visible,
+.textButton:focus-visible,
+.input:focus-visible,
+.textarea:focus-visible,
+.choice input:focus-visible,
 .tableWrap:focus-visible,
 .content:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
+}
+
+.pageHeading,
+.formActions,
+.rowActions,
+.pagination,
+.dialogActions,
+.fieldMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.pageHeading {
+  justify-content: space-between;
+  align-items: start;
+}
+
+.buttonLink {
+  min-height: 2.75rem;
+  min-width: 8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.buttonLink:hover {
+  background: var(--accent-soft);
+}
+
+.primaryButton {
+  color: white;
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.primaryButton:hover:not(:disabled) {
+  color: white;
+  background: color-mix(in srgb, var(--accent) 86%, black);
+}
+
+.dangerButton {
+  color: white;
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 86%, black);
+}
+
+.deleteTrigger,
+.textButton {
+  padding: 0.35rem 0;
+  color: var(--danger);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.textButton {
+  color: var(--accent);
+}
+
+.toolForm {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field label,
+.fieldset legend {
+  font-weight: 700;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem;
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  font: inherit;
+}
+
+.textarea {
+  resize: none;
+  line-height: 1.6;
+}
+
+.input[aria-invalid="true"],
+.textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.fieldError,
+.formMessage,
+.notice {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--danger);
+}
+
+.notice {
+  margin-block: 1rem;
+  color: var(--foreground);
+}
+
+.fieldMeta {
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+
+.choiceGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.choice input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--accent);
+}
+
+.formActions {
+  min-height: 3rem;
+}
+
+.rowActions {
+  flex-wrap: nowrap;
+}
+
+.pagination {
+  justify-content: center;
+  margin-block: 1.5rem;
+}
+
+.disabledPage {
+  min-height: 2.75rem;
+  min-width: 8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  opacity: 0.65;
+}
+
+.dialog {
+  width: min(calc(100% - 2rem), 34rem);
+  max-height: min(80vh, 42rem);
+  padding: 0;
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.dialog::backdrop {
+  background: rgb(23 32 54 / 55%);
+}
+
+.dialogBody {
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.dialogActions {
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--line);
+  background: var(--background);
 }
 
 .skipLink {
@@ -220,5 +436,16 @@
 
   .stats {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pageHeading,
+  .formActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .buttonLink,
+  .formActions .button {
+    width: 100%;
   }
 }
