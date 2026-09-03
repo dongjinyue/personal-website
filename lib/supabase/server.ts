@@ -2,47 +2,32 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-
 import type { Database } from "./database.types";
 
-/**
- * 为每次服务端请求创建独立的 Supabase Client。
- *
- * 不要把 Client 定义成全局单例，因为不同用户拥有不同的 Cookie（会话凭据）。
- */
-export async function createSupabaseServerClient() {
+/** 每个请求单独创建；true 只供能写 Cookie 的 Server Action 使用。 */
+export async function createSupabaseServerClient(writableCookies = false) {
   const cookieStore = await cookies();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        /**
-         * 将当前请求中的全部 Cookie 交给 Supabase。
-         * Day 11 实现管理员登录后，这些 Cookie 将保存登录状态。
-         */
-        getAll() {
-          return cookieStore.getAll();
-        },
+  if (!url || !key) {
+    throw new Error("缺少 Supabase 环境变量，请检查本地配置。");
+  }
 
-        /**
-         * Supabase 刷新登录状态时，需要更新 Cookie。
-         *
-         * Server Component（服务端组件）有时不允许直接修改 Cookie，
-         * 所以这里捕获异常；Day 11 会通过 Proxy/Middleware 完善会话刷新。
-         */
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // 在不允许修改 Cookie 的 Server Component 中忽略，
-            // 登录会话刷新将由后续的 Proxy/Middleware 负责。
-          }
-        },
+  return createServerClient<Database>(url, key, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        // 页面渲染只读，会话刷新由 Proxy 在响应提交前处理。
+        if (!writableCookies) return;
+
+        // 登录和退出必须真正写入 Cookie；失败时不能吞掉错误。
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, options);
+        });
       },
     },
-  );
+  });
 }
