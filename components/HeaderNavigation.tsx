@@ -61,12 +61,17 @@ export default function HeaderNavigation({ showAdmin, projects, tools, categorie
               <div className={styles.megaGrid}>
                 {toolGroups.map(([category, categoryTools]) => (
                   <section className={styles.megaGroup} key={category}>
-                    <h2>{category}</h2>
-                    {categoryTools.length > 0 ? categoryTools.map((tool) => (
-                      <a key={tool.url} href={tool.url} target="_blank" rel="noopener noreferrer">
-                        {tool.name}<span aria-hidden="true"> ↗</span>
-                      </a>
-                    )) : <span>暂无公开工具</span>}
+                    <header className={styles.megaGroupHeader}>
+                      <span>分类</span>
+                      <h2>{category}</h2>
+                    </header>
+                    <div className={styles.megaItems}>
+                      {categoryTools.length > 0 ? categoryTools.map((tool) => (
+                        <a key={tool.url} href={tool.url} target="_blank" rel="noopener noreferrer">
+                          {tool.name}<span aria-hidden="true"> ↗</span>
+                        </a>
+                      )) : <span className={styles.megaGroupEmpty}>暂无公开工具</span>}
+                    </div>
                   </section>
                 ))}
               </div>
