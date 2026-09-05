@@ -22,7 +22,7 @@ export async function getAdminToolsPage(rawPage?: string) {
   const from = (page - 1) * TOOL_PAGE_SIZE;
   const { data, error } = await supabase
     .from("tools")
-    .select("id, name, description, url, category, is_favorite, created_at, updated_at")
+    .select("id, name, description, url, category, is_favorite, is_public, created_at, updated_at, tool_tags(tags(name))")
     .order("updated_at", { ascending: false })
     .order("id", { ascending: true })
     .range(from, from + TOOL_PAGE_SIZE - 1);
@@ -38,7 +38,7 @@ export async function getAdminTool(id: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("tools")
-    .select("id, name, description, url, category, is_favorite, created_at, updated_at")
+    .select("id, name, description, url, category, is_favorite, is_public, created_at, updated_at")
     .eq("id", id)
     .maybeSingle();
 

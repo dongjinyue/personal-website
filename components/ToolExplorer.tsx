@@ -1,22 +1,27 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { Tool, ToolCategory } from "@/data/tools";
+import type { Tool } from "@/data/tools";
 import ToolCard from "./ToolCard";
 import styles from "./ToolExplorer.module.css";
 
 type ToolExplorerProps = {
   tools: Tool[];
+  categories: string[];
 };
 
-type ToolFilterCategory = "全部" | ToolCategory;
+type ToolFilterCategory = "全部" | string;
 
-const categories: ToolFilterCategory[] = ["全部", "AI", "开发", "学习", "效率"];
-
-export default function ToolExplorer({ tools }: ToolExplorerProps) {
+export default function ToolExplorer({ tools, categories: categoryOptions }: ToolExplorerProps) {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<ToolFilterCategory>("全部");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // 分类按钮直接来自公开工具数据，管理员新增分类后无需修改代码。
+  const categories: ToolFilterCategory[] = [
+    "全部",
+    ...Array.from(new Set(categoryOptions))
+      .sort((left, right) => left.localeCompare(right, "zh-CN")),
+  ];
 
   // 搜索结果由当前数据和筛选条件直接计算，不需要维护第二份结果状态。
   const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");

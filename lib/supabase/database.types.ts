@@ -191,6 +191,27 @@ export type Database = {
           },
         ]
       }
+      tool_categories: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tools: {
         Row: {
           category: string
@@ -198,6 +219,7 @@ export type Database = {
           description: string
           id: string
           is_favorite: boolean
+          is_public: boolean
           name: string
           updated_at: string
           url: string
@@ -208,6 +230,7 @@ export type Database = {
           description: string
           id: string
           is_favorite?: boolean
+          is_public?: boolean
           name: string
           updated_at?: string
           url: string
@@ -218,11 +241,20 @@ export type Database = {
           description?: string
           id?: string
           is_favorite?: boolean
+          is_public?: boolean
           name?: string
           updated_at?: string
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tools_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "tool_categories"
+            referencedColumns: ["name"]
+          },
+        ]
       }
     }
     Views: {

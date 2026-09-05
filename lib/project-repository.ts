@@ -67,6 +67,14 @@ export async function getFeaturedPublicProjects() {
   return data.map(toProject);
 }
 
+/** 顶部导航只展示少量最近公开项目，避免把全部数据塞进菜单。 */
+export async function getNavigationPublicProjects() {
+  const { data, error } = await publicQuery()
+    .order("updated_at", { ascending: false }).order("id").limit(3);
+  if (error) return [];
+  return data.map((row) => ({ name: row.name, slug: row.slug }));
+}
+
 export async function getPublicProjectBySlug(slug: string) {
   if (!validProjectSlug(slug)) return null;
   const { data, error } = await publicQuery().eq("slug", slug).maybeSingle();

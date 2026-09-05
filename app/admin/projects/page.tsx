@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import GuardedLink from "@/components/admin/GuardedLink";
 import DeleteProjectButton from "@/components/admin/DeleteProjectButton";
+import ProjectSelectionTable from "@/components/admin/ProjectSelectionTable";
 import { getAdminProjectsPage } from "@/lib/admin-projects-repository";
 import { formatAdminDate } from "@/lib/format-admin-date";
-import { projectStatusLabels } from "@/lib/project-status";
-import type { ProjectStatus } from "@/data/projects";
 import styles from "../admin.module.css";
 
 export const metadata: Metadata = { title: "项目管理" };
@@ -27,16 +26,19 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
       <GuardedLink className={`${styles.buttonLink} ${styles.primaryButton}`} href={`/admin/projects/new?page=${result.page}`}>新增项目</GuardedLink></div>
     <p className={styles.notice} role="status" aria-live="polite">{notice ? notices[notice] : ""}</p>
     {!result.rows.length ? <div className={styles.state}><p>还没有项目。</p></div> :
-      <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="项目管理列表，可横向滚动">
-        <table className={styles.table}><caption>当前显示第 {first}～{first + result.rows.length - 1} 条，共 {result.total} 条。</caption>
-          <thead><tr><th>名称</th><th>进度</th><th>可见性</th><th>推荐</th><th>更新时间（北京时间）</th><th>操作</th></tr></thead>
-          <tbody>{result.rows.map((project) => <tr key={project.id}>
-            <th scope="row">{project.name}</th><td>{projectStatusLabels[project.status as ProjectStatus]}</td>
-            <td><span className={project.is_public ? styles.publicBadge : styles.privateBadge}>{project.is_public ? "公开" : "私有"}</span></td>
-            <td>{project.is_featured ? "是" : "否"}</td><td>{formatAdminDate(project.updated_at)}</td>
-            <td><div className={styles.rowActions}><GuardedLink className={styles.link} href={`/admin/projects/${project.id}/edit?page=${result.page}`}>编辑</GuardedLink>
-              <DeleteProjectButton id={project.id} name={project.name} updatedAt={project.updated_at} page={result.page} /></div></td>
-          </tr>)}</tbody></table></div>}
+      <ProjectSelectionTable rows={result.rows} total={result.total} page={result.page} first={first} />}
+    {!!result.rows.length && <div className={styles.mobileList} aria-label="项目管理列表">
+      {result.rows.map((project) => <article className={styles.mobileRecord} key={project.id}>
+        <h2>{project.name}</h2><dl className={styles.mobileMeta}>
+          <dt>Slug</dt><dd>{project.slug}</dd>
+          <dt>是否公开</dt><dd>{project.is_public ? "公开" : "隐藏"}</dd>
+          <dt>首页推荐</dt><dd>{project.is_featured ? "推荐" : "不推荐"}</dd>
+          <dt>更新时间</dt><dd>{formatAdminDate(project.updated_at)}</dd></dl>
+        <div className={styles.rowActions}>{project.is_public && <GuardedLink className={styles.link} href={`/projects/${project.slug}`}>查看</GuardedLink>}
+          <GuardedLink className={styles.link} href={`/admin/projects/${project.id}/edit?page=${result.page}`}>编辑</GuardedLink>
+          <DeleteProjectButton id={project.id} name={project.name} updatedAt={project.updated_at} page={result.page} /></div>
+      </article>)}
+    </div>}
     <nav className={styles.pagination} aria-label="项目列表分页">
       {result.page > 1 ? <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${result.page - 1}`}>上一页</GuardedLink> : <span className={styles.disabledPage}>上一页</span>}
       <span>第 {result.page}/{result.pages} 页</span>

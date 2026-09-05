@@ -1,21 +1,11 @@
-import type { Tool, ToolCategory } from "@/data/tools";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-/**
- * 判断数据库中的分类是否属于网站支持的工具分类。
- *
- * PostgreSQL 的 CHECK 约束不会自动生成 TypeScript 联合类型，
- * 因此需要在运行时再次验证，防止异常数据进入页面。
- */
-function isToolCategory(category: string): category is ToolCategory {
-  return ["AI", "开发", "学习", "效率"].includes(category);
-}
+import type { Tool } from "@/data/tools";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
 /**
  * 从 Supabase 查询全部工具及其标签。
  */
 export async function getTools(): Promise<Tool[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createPublicSupabaseClient();
 
   const { data, error } = await supabase
     .from("tools")
@@ -26,12 +16,14 @@ export async function getTools(): Promise<Tool[]> {
       url,
       category,
       is_favorite,
+      is_public,
       tool_tags (
         tags (
           name
         )
       )
     `)
+    .eq("is_public", true)
     .order("name");
 
   if (error) {
@@ -39,10 +31,6 @@ export async function getTools(): Promise<Tool[]> {
   }
 
   return data.map((tool) => {
-    if (!isToolCategory(tool.category)) {
-      throw new Error(`发现不支持的工具分类：${tool.category}`);
-    }
-
     return {
       id: tool.id,
       name: tool.name,
@@ -57,4 +45,29 @@ export async function getTools(): Promise<Tool[]> {
       ),
     };
   });
+}
+
+/** 分类直接来自分类表，因此尚未绑定工具的新分类也能立即出现在公开界面。 */
+export async function getPublicToolCategories(): Promise<string[]> {
+  const supabase = createPublicSupabaseClient();
+  const { data, error } = await supabase
+    .from("tool_categories")
+    .select("name")
+    .order("name", { ascending: true });
+
+  if (error) throw new Error(`读取工具分类失败：${error.message}`);
+  return data.map((category) => category.name);
+}
+
+/** 首页只读取常用工具，确保展示内容与后台管理保持一致。 */
+export async function getFavoriteTools(limit = 3): Promise<Tool[]> {
+  const tools = await getTools();
+  return tools.filter((tool) => tool.isFavorite).slice(0, limit);
+}
+
+/** 顶部导航按真实分类展示公开工具；常用工具在同一分类中优先。 */
+export async function getNavigationPublicTools() {
+  const tools = await getTools();
+  return [...tools].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite) || a.name.localeCompare(b.name, "zh-CN"))
+    .slice(0, 16).map((tool) => ({ name: tool.name, url: tool.url, category: tool.category }));
 }

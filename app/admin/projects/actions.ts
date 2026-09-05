@@ -80,6 +80,41 @@ export async function setProjectVisibility(id: string, version: string, visible:
   return { ok: true, message: visible ? "项目已公开。" : "项目已设为私有。" };
 }
 
+/** 批量切换公开状态；每条记录都带版本条件，避免覆盖他人刚完成的修改。 */
+export async function setProjectsVisibility(
+  items: Array<{ id: string; updatedAt: string }>,
+  visible: boolean,
+) {
+  const denied = await checkProjectWriter();
+  if (denied) return { ok: false, message: denied };
+  if (!Array.isArray(items) || items.length === 0 || items.length > 50 || typeof visible !== "boolean") {
+    return { ok: false, message: "请选择 1～50 个项目后再操作。" };
+  }
+  if (items.some((item) => !validProjectId(item.id) || !validVersion(item.updatedAt))) {
+    return { ok: false, message: "所选项目参数无效，请刷新列表后重试。" };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient(true);
+    for (const item of items) {
+      const { data, error } = await supabase.from("projects")
+        .update({ is_public: visible })
+        .eq("id", item.id)
+        .eq("updated_at", item.updatedAt)
+        .select("id")
+        .maybeSingle();
+      if (error || !data) {
+        return { ok: false, message: "部分项目未修改，请刷新列表核对版本和实际公开状态。" };
+      }
+      invalidateProjects(item.id);
+    }
+  } catch {
+    return { ok: false, message: "没有收到完整确认，请刷新列表核对实际公开状态。" };
+  }
+
+  return { ok: true, message: visible ? `已公开 ${items.length} 个项目。` : `已隐藏 ${items.length} 个项目。` };
+}
+
 export async function deleteProject(id: string, version: string) {
   const denied = await checkProjectWriter();
   if (denied) return { ok: false, message: denied };

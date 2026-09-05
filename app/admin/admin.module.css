@@ -121,35 +121,127 @@
   overflow-x: auto;
   max-width: 100%;
   scrollbar-gutter: stable;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--surface);
 }
 
 .table {
   width: 100%;
-  min-width: 34rem;
+  min-width: 64rem;
   border-collapse: collapse;
   text-align: left;
 }
 
+.projectTable { min-width: 72rem; }
+.toolTable { min-width: 62rem; }
+.categoryTable { min-width: 42rem; }
+
+.categoryCreate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
 .table caption {
   text-align: left;
-  padding-bottom: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
   color: var(--muted);
 }
 
 .table th,
 .table td {
-  padding: 0.9rem 0.75rem;
+  padding: 1rem;
   border-bottom: 1px solid var(--line);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .table th {
   font-weight: 700;
 }
 
+.table thead th {
+  white-space: nowrap;
+  color: var(--muted);
+  background: var(--background);
+}
+
+.table tbody tr:hover > * {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+
+.table tbody tr:last-child > * { border-bottom: 0; }
+
 .table td {
   overflow-wrap: anywhere;
   max-width: 24rem;
+}
+
+/* 宽表格的操作列固定在右侧，横向滚动时仍可立即操作。 */
+.table th:last-child,
+.table td:last-child {
+  position: sticky;
+  right: 0;
+  min-width: 11rem;
+  background: var(--surface);
+  box-shadow: -10px 0 16px -16px rgb(23 32 54 / 55%);
+}
+
+.table thead th:last-child {
+  z-index: 2;
+  background: var(--background);
+}
+
+.table tbody tr:hover > td:last-child {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+
+.selectColumn {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 3.5rem;
+  min-width: 3.5rem;
+  text-align: center;
+  background: var(--surface);
+  box-shadow: 10px 0 16px -16px rgb(23 32 54 / 45%);
+}
+
+.table thead .selectColumn {
+  z-index: 3;
+  background: var(--background);
+}
+
+.table tbody tr:hover > .selectColumn {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+
+.selectColumn input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.bulkToolbar {
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--background);
+}
+
+.bulkToolbar > span {
+  min-width: 6.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .state {
@@ -383,6 +475,8 @@
 
 .rowActions {
   flex-wrap: nowrap;
+  justify-content: flex-start;
+  white-space: nowrap;
 }
 
 .pagination {
@@ -403,7 +497,12 @@
 }
 
 .dialog {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-dialog);
   width: min(calc(100% - 2rem), 34rem);
+  margin: 0;
   max-height: min(80vh, 42rem);
   padding: 0;
   color: var(--foreground);
@@ -415,6 +514,14 @@
 .dialog::backdrop {
   background: rgb(23 32 54 / 55%);
 }
+
+.mobileList { display: none; }
+.mobileRecord { padding: 1rem 0; border-top: 1px solid var(--line); }
+.mobileRecord:first-child { border-top: 0; }
+.mobileRecord h2 { margin: 0; font-size: 1.05rem; }
+.mobileMeta { display: grid; grid-template-columns: 6rem 1fr; gap: .45rem 1rem; margin: .8rem 0; color: var(--muted); font-size: .9rem; }
+.mobileMeta dt { color: var(--foreground); font-weight: 700; }
+.mobileMeta dd { margin: 0; overflow-wrap: anywhere; }
 
 .dialogBody {
   max-height: 55vh;
@@ -469,4 +576,11 @@
   .formActions .button {
     width: 100%;
   }
+
+  .desktopTable { display: none; }
+  .mobileList { display: block; }
+  .rowActions { flex-wrap: wrap; margin-top: .8rem; }
+  .bulkToolbar { display: none; }
+  .categoryCreate { grid-template-columns: minmax(0, 1fr); }
+  .categoryCreate .button { width: 100%; }
 }

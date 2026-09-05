@@ -81,7 +81,7 @@ export default function ProjectForm({ mode, id, version, initial, returnPage, is
       <button className={`${styles.button} ${styles.primaryButton}`} disabled={pending}>
         {pending ? "正在保存…" : mode === "create" ? "创建私有项目" : "保存修改"}
       </button>
-      <GuardedLink className={styles.link} href={`/admin/projects?page=${returnPage}`}>取消并返回项目列表</GuardedLink>
+      <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${returnPage}`}>取消</GuardedLink>
     </div>
   </form>;
 }

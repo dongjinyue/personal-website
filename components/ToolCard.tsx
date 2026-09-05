@@ -43,8 +43,8 @@ export default function ToolCard({
       )}
 
       <div className={styles.actions}>
-        <a className={styles.action} href={url} target="_blank" rel="noreferrer">
-          打开工具 <span aria-hidden="true">↗</span>
+        <a className={styles.action} href={url} target="_blank" rel="noopener noreferrer">
+          访问工具 <span aria-hidden="true">↗</span>
         </a>
       </div>
     </article>

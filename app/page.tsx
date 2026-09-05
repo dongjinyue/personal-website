@@ -1,16 +1,12 @@
 import Link from "next/link";
 import ProjectCard from "@/components/ProjectCard";
 import ToolCard from "@/components/ToolCard";
-import { tools } from "@/data/tools";
 import { getFeaturedPublicProjects } from "@/lib/project-repository";
+import { getFavoriteTools } from "@/lib/tool-repository";
 import styles from "./page.module.css";
 
 // 公开数据每次请求都以访客身份读取，避免构建时固化可见性结果。
 export const dynamic = "force-dynamic";
-
-const favoriteTools = tools
-  .filter((tool) => tool.isFavorite)
-  .slice(0, 2);
 
 const quickLinks = [
   { href: "/projects", title: "项目中心", description: "查看正在推进与已经完成的个人项目。", meta: "PROJECTS", icon: "folder" },
@@ -25,7 +21,10 @@ function QuickLinkIcon({ type }: { type: (typeof quickLinks)[number]["icon"] }) 
 }
 
 export default async function HomePage() {
-  const featuredProjects = await getFeaturedPublicProjects();
+  const [featuredProjects, favoriteTools] = await Promise.all([
+    getFeaturedPublicProjects(),
+    getFavoriteTools(2),
+  ]);
   return (
     <main className={styles.page}>
       <section className={styles.hero} aria-labelledby="hero-title">
@@ -38,10 +37,14 @@ export default async function HomePage() {
             <Link className={styles.secondaryAction} href="/tools">打开工具集<span aria-hidden="true">→</span></Link>
           </div>
         </div>
-        <div className={styles.orbit} aria-hidden="true">
-          <div className={styles.orbitCore}><span>MY</span><strong>SPACE</strong></div>
-          <span className={styles.orbitDotOne} /><span className={styles.orbitDotTwo} />
-          <p>PROJECTS · TOOLS · NOTES</p>
+        <div className={styles.indexPanel} aria-label="网站内容概览">
+          <p className={styles.indexLabel}>MY SPACE / INDEX</p>
+          <dl>
+            <div><dt>项目</dt><dd>构建记录与完整详情</dd></div>
+            <div><dt>工具</dt><dd>经过整理的日常工作入口</dd></div>
+            <div><dt>更新方式</dt><dd>由后台内容实时驱动</dd></div>
+          </dl>
+          <p className={styles.indexNote}>持续整理，而不是一次完成。</p>
         </div>
       </section>
 

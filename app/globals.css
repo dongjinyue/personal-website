@@ -10,6 +10,9 @@
   --accent-soft: #eef0ff;
   --danger: #a31e31;
   --content-width: 1180px;
+  --z-header: 400;
+  --z-backdrop: 500;
+  --z-dialog: 600;
 }
 
 @theme inline {
@@ -27,6 +30,10 @@ body {
   scrollbar-color: #aab2c3 #eef0f5;
   scrollbar-width: thin;
 }
+
+a, button { -webkit-tap-highlight-color: transparent; }
+
+:focus-visible { scroll-margin-block: 6rem; }
 
 * {
   box-sizing: border-box;

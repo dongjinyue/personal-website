@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import GuardedLink from "@/components/admin/GuardedLink";
 import DeleteToolButton from "@/components/admin/DeleteToolButton";
+import ToolSelectionTable from "@/components/admin/ToolSelectionTable";
 import { getAdminToolsPage } from "@/lib/admin-tools-repository";
 import { formatAdminDate } from "@/lib/format-admin-date";
 import styles from "../admin.module.css";
@@ -54,32 +55,20 @@ export default async function AdminToolsPage({ searchParams }: Props) {
           <p>还没有工具。</p>
           <GuardedLink className={styles.link} href="/admin/tools/new?page=1">新增第一个工具</GuardedLink>
         </div>
-      ) : (
-        <div className={styles.tableWrap} tabIndex={0} role="region"
-          aria-label="工具管理列表，可横向滚动">
-          <table className={styles.table}>
-            <caption>当前显示第 {first}～{last} 条，共 {result.total} 条，第 {result.page}/{result.pages} 页。</caption>
-            <thead><tr><th scope="col">名称</th><th scope="col">分类</th><th scope="col">收藏</th>
-              <th scope="col">更新时间（北京时间）</th><th scope="col">操作</th></tr></thead>
-            <tbody>
-              {result.rows.map((tool) => (
-                <tr key={tool.id}>
-                  <th scope="row">{tool.name}</th>
-                  <td>{tool.category}</td>
-                  <td>{tool.is_favorite ? "是" : "否"}</td>
-                  <td>{formatAdminDate(tool.updated_at)}</td>
-                  <td><div className={styles.rowActions}>
-                    <GuardedLink className={styles.link}
-                      href={`/admin/tools/${tool.id}/edit?page=${result.page}`}>编辑</GuardedLink>
-                    <DeleteToolButton id={tool.id} name={tool.name}
-                      updated_at={tool.updated_at} page={result.page} />
-                  </div></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      ) : <ToolSelectionTable rows={result.rows} total={result.total} page={result.page}
+        pages={result.pages} first={first} last={last} />}
+
+      {!!result.rows.length && <div className={styles.mobileList} aria-label="工具管理列表">
+        {result.rows.map((tool) => <article className={styles.mobileRecord} key={tool.id}>
+          <h2>{tool.name}</h2><dl className={styles.mobileMeta}>
+            <dt>分类</dt><dd>{tool.category}</dd><dt>是否公开</dt><dd>{tool.is_public ? "公开" : "隐藏"}</dd>
+            <dt>标签</dt><dd>{tool.tool_tags.flatMap((item) => item.tags ? [item.tags.name] : []).join("、") || "—"}</dd>
+            <dt>更新时间</dt><dd>{formatAdminDate(tool.updated_at)}</dd></dl>
+          <div className={styles.rowActions}><a className={styles.link} href={tool.url} target="_blank" rel="noopener noreferrer">访问</a>
+            <GuardedLink className={styles.link} href={`/admin/tools/${tool.id}/edit?page=${result.page}`}>编辑</GuardedLink>
+            <DeleteToolButton id={tool.id} name={tool.name} updated_at={tool.updated_at} page={result.page} /></div>
+        </article>)}
+      </div>}
 
       <nav className={styles.pagination} aria-label="工具列表分页">
         {result.page > 1 ? <GuardedLink className={styles.buttonLink}

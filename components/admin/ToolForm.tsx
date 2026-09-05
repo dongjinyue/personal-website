@@ -4,11 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { saveTool } from "@/app/admin/tools/actions";
 import GuardedLink from "@/components/admin/GuardedLink";
 import { useUnsavedChanges } from "@/components/admin/UnsavedChangesProvider";
-import {
-  toolCategories,
-  type ToolActionState,
-  type ToolFields,
-} from "@/lib/tool-form";
+import { type ToolActionState, type ToolFields } from "@/lib/tool-form";
 import styles from "@/app/admin/admin.module.css";
 
 type Props = {
@@ -17,9 +13,10 @@ type Props = {
   version: string;
   initial: ToolFields;
   returnPage: number;
+  categories: string[];
 };
 
-export default function ToolForm({ mode, id, version, initial, returnPage }: Props) {
+export default function ToolForm({ mode, id, version, initial, returnPage, categories }: Props) {
   const [values, setValues] = useState(initial);
   const [expanded, setExpanded] = useState(false);
   const [editedAtAttempt, setEditedAtAttempt] = useState<Partial<Record<keyof ToolFields, number>>>({});
@@ -100,19 +97,22 @@ export default function ToolForm({ mode, id, version, initial, returnPage }: Pro
         <p className={styles.fieldError} id="tool-url-error">{fieldError("url")}</p>
       </div>
 
-      <fieldset className={styles.fieldset} aria-describedby="tool-category-error"
+      <fieldset className={styles.fieldset} aria-describedby="tool-category-help tool-category-error"
         data-invalid={Boolean(fieldError("category"))} tabIndex={-1}>
         <legend>分类（必填）</legend>
-        <div className={styles.choiceGroup}>
-          {toolCategories.map((category) => (
-            <label key={category} className={styles.choice}>
-              <input type="radio" name="category" value={category}
-                checked={values.category === category}
-                onChange={() => update("category", category)} />
-              <span>{category}</span>
-            </label>
-          ))}
-        </div>
+        {categories.length > 0 ? (
+          <div className={styles.choiceGroup}>
+            {categories.map((category) => (
+              <label key={category} className={styles.choice}>
+                <input type="radio" name="category" value={category}
+                  checked={values.category === category}
+                  onChange={() => update("category", category)} />
+                <span>{category}</span>
+              </label>
+            ))}
+          </div>
+        ) : <p className={styles.warning}>还没有分类，请先到“分类管理”新增分类。</p>}
+        <p className={styles.hint} id="tool-category-help">选项由后台“分类管理”统一维护。</p>
         <p className={styles.fieldError} id="tool-category-error">{fieldError("category")}</p>
       </fieldset>
 
@@ -127,11 +127,11 @@ export default function ToolForm({ mode, id, version, initial, returnPage }: Pro
         role="status" aria-live="polite">{state.message}</p>
       <div className={styles.formActions}>
         <button type="submit" className={`${styles.button} ${styles.primaryButton}`}
-          disabled={pending}>
+          disabled={pending || categories.length === 0}>
           {pending ? "正在保存…" : mode === "create" ? "创建工具" : "保存修改"}
         </button>
-        <GuardedLink className={styles.link} href={`/admin/tools?page=${returnPage}`}>
-          取消并返回工具列表
+        <GuardedLink className={styles.buttonLink} href={`/admin/tools?page=${returnPage}`}>
+          取消
         </GuardedLink>
       </div>
     </form>

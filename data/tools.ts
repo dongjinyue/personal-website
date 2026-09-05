@@ -1,4 +1,5 @@
-export type ToolCategory = "AI" | "开发" | "学习" | "效率";
+// 分类由管理员自由填写，公开页面会根据真实数据自动生成筛选项。
+export type ToolCategory = string;
 
 /**
  * 工具数据模型。

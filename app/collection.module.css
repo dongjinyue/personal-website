@@ -9,6 +9,10 @@
   max-width: 680px;
 }
 
+/* 工具页是高频查找入口，首屏应尽快露出搜索和内容。 */
+.compactPage { padding-top: clamp(52px, 6vw, 76px); }
+.compactHeading h1 { font-size: clamp(2.7rem, 5vw, 4.25rem); }
+
 .eyebrow {
   margin: 0 0 14px;
   color: var(--accent);

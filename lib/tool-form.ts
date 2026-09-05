@@ -1,6 +1,3 @@
-export const toolCategories = ["AI", "开发", "学习", "效率"] as const;
-export type ToolCategory = (typeof toolCategories)[number];
-
 export type ToolFields = {
   name: string;
   description: string;
@@ -44,8 +41,8 @@ export function parseToolForm(formData: FormData) {
   if (!values.description || values.description.length > 500) {
     errors.description = "请输入 1～500 个字符的简介。";
   }
-  if (!toolCategories.some((item) => item === values.category)) {
-    errors.category = "请选择 AI、开发、学习或效率。";
+  if (!values.category || values.category.length > 40) {
+    errors.category = "请输入 1～40 个字符的分类名称。";
   }
 
   try {

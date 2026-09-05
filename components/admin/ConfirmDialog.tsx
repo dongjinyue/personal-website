@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import styles from "@/app/admin/admin.module.css";
 
 type Props = {
@@ -29,6 +29,8 @@ export default function ConfirmDialog({
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -45,8 +47,8 @@ export default function ConfirmDialog({
     <dialog
       ref={dialogRef}
       className={styles.dialog}
-      aria-labelledby="confirm-title"
-      aria-describedby="confirm-description"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       onCancel={(event) => {
         event.preventDefault();
         if (!pending) onCancel();
@@ -56,8 +58,8 @@ export default function ConfirmDialog({
       }}
     >
       <div className={styles.dialogBody}>
-        <h2 id="confirm-title" className={styles.heading}>{title}</h2>
-        <p id="confirm-description">{description}</p>
+        <h2 id={titleId} className={styles.heading}>{title}</h2>
+        <p id={descriptionId}>{description}</p>
         {pending && <p className={styles.hint}>操作正在处理，请勿关闭页面。</p>}
         <p className={styles.formMessage} role="status" aria-live="polite">{message}</p>
       </div>

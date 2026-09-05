@@ -19,9 +19,49 @@ async function checkWriter() {
 }
 
 function invalidateTools() {
+  revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/tools");
   revalidatePath("/tools");
+}
+
+function validVersion(version: string) {
+  return Boolean(version) && Number.isFinite(Date.parse(version));
+}
+
+/** 批量公开或隐藏工具；使用版本条件避免覆盖较新的编辑。 */
+export async function setToolsVisibility(
+  items: Array<{ id: string; updatedAt: string }>,
+  visible: boolean,
+) {
+  const denied = await checkWriter();
+  if (denied) return { ok: false, message: denied };
+  if (!Array.isArray(items) || items.length === 0 || items.length > 50 || typeof visible !== "boolean") {
+    return { ok: false, message: "请选择 1～50 个工具后再操作。" };
+  }
+  if (items.some((item) => !validToolId(item.id) || !validVersion(item.updatedAt))) {
+    return { ok: false, message: "所选工具参数无效，请刷新列表后重试。" };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient(true);
+    for (const item of items) {
+      const { data, error } = await supabase.from("tools")
+        .update({ is_public: visible })
+        .eq("id", item.id)
+        .eq("updated_at", item.updatedAt)
+        .select("id")
+        .maybeSingle();
+      if (error || !data) {
+        return { ok: false, message: "部分工具未修改，请刷新列表核对实际公开状态。" };
+      }
+    }
+  } catch {
+    return { ok: false, message: "没有收到完整确认，请刷新列表核对实际公开状态。" };
+  }
+
+  invalidateTools();
+  return { ok: true, message: visible ? `已公开 ${items.length} 个工具。` : `已隐藏 ${items.length} 个工具。` };
 }
 
 export async function saveTool(
@@ -48,6 +88,17 @@ export async function saveTool(
 
   try {
     const supabase = await createSupabaseServerClient(true);
+    // 分类必须来自分类管理，不能接受客户端伪造的新名称。
+    const { data: category, error: categoryError } = await supabase
+      .from("tool_categories")
+      .select("id")
+      .eq("name", parsed.values.category)
+      .maybeSingle();
+    if (categoryError || !category) {
+      return fail("所选分类不存在或已被删除，请刷新页面后重新选择。", {
+        category: "请选择分类管理中现有的分类。",
+      });
+    }
     const query = mode === "create"
       ? supabase.from("tools").insert({ id, ...parsed.values })
       : supabase.from("tools").update(parsed.values).eq("id", id).eq("updated_at", version);

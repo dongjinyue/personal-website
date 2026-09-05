@@ -1,6 +1,5 @@
 import ProjectForm from "@/components/admin/ProjectForm";
 import ProjectVisibilityButton from "@/components/admin/ProjectVisibilityButton";
-import GuardedLink from "@/components/admin/GuardedLink";
 import { getAdminProject } from "@/lib/admin-projects-repository";
 import styles from "../../../admin.module.css";
 
@@ -24,6 +23,5 @@ export default async function EditProjectPage({ params, searchParams }: Props) {
       <div className={styles.visibilityActions}><ProjectVisibilityButton id={project.id} name={project.name}
         updatedAt={project.updated_at} isPublic={project.is_public} /></div>
     </section>
-    <p><GuardedLink className={styles.link} href={`/admin/projects?page=${page}`}>返回项目列表</GuardedLink></p>
   </section>;
 }

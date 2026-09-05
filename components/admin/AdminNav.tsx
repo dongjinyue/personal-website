@@ -5,8 +5,8 @@ import GuardedLink from "@/components/admin/GuardedLink";
 import styles from "@/app/admin/admin.module.css";
 
 const links = [
-  { href: "/admin", label: "概览" },
   { href: "/admin/tools", label: "工具管理" },
+  { href: "/admin/categories", label: "分类管理" },
   { href: "/admin/projects", label: "项目管理" },
 ];
 
@@ -16,10 +16,7 @@ export default function AdminNav() {
   return (
     <nav aria-label="后台导航" className={styles.nav}>
       {links.map((item) => {
-        // 概览只精确匹配，不能让每个后台页面都同时高亮概览。
-        const active = item.href === "/admin"
-          ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (
           <GuardedLink
