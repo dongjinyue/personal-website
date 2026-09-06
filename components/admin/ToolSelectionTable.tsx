@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setToolsVisibility } from "@/app/admin/tools/actions";
+import { setToolsGuestVisibility } from "@/app/admin/tools/actions";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import DeleteToolButton from "@/components/admin/DeleteToolButton";
 import GuardedLink from "@/components/admin/GuardedLink";
@@ -11,7 +11,7 @@ import styles from "@/app/admin/admin.module.css";
 
 type Row = {
   id: string; name: string; url: string; category: string;
-  is_public: boolean; updated_at: string;
+  is_public: boolean; hide_from_guests: boolean; updated_at: string;
   tool_tags: Array<{ tags: { name: string } | null }>;
 };
 type Props = { rows: Row[]; total: number; page: number; pages: number; first: number; last: number };
@@ -29,7 +29,7 @@ export default function ToolSelectionTable({ rows, total, page, pages, first, la
   function confirmVisibility() {
     if (targetVisibility === null || pending) return;
     startTransition(async () => {
-      const result = await setToolsVisibility(selectedItems, targetVisibility);
+      const result = await setToolsGuestVisibility(selectedItems, targetVisibility);
       setMessage(result.message);
       if (!result.ok) return;
       setTargetVisibility(null); setSelected(new Set()); router.refresh();
@@ -40,9 +40,9 @@ export default function ToolSelectionTable({ rows, total, page, pages, first, la
     <div className={styles.bulkToolbar} aria-label="工具批量操作">
       <span>已选择 {selected.size} 项</span>
       <button type="button" className={`${styles.button} ${styles.primaryButton}`}
-        disabled={!selected.size || pending} onClick={() => { setMessage(""); setTargetVisibility(true); }}>设为公开</button>
+        disabled={!selected.size || pending} onClick={() => { setMessage(""); setTargetVisibility(true); }}>游客可见</button>
       <button type="button" className={styles.button}
-        disabled={!selected.size || pending} onClick={() => { setMessage(""); setTargetVisibility(false); }}>设为隐藏</button>
+        disabled={!selected.size || pending} onClick={() => { setMessage(""); setTargetVisibility(false); }}>仅登录可见</button>
     </div>
     <p className={styles.notice} role="status" aria-live="polite">{message}</p>
     <div className={`${styles.tableWrap} ${styles.desktopTable}`} tabIndex={0} role="region" aria-label="工具管理列表，可横向滚动">
@@ -50,7 +50,7 @@ export default function ToolSelectionTable({ rows, total, page, pages, first, la
         <caption>当前显示第 {first}～{last} 条，共 {total} 条，第 {page}/{pages} 页。</caption>
         <thead><tr><th scope="col" className={styles.selectColumn}><input type="checkbox" aria-label="选择当前页全部工具"
           checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(rows.map((row) => row.id)))} /></th>
-          <th scope="col">名称</th><th scope="col">分类</th><th scope="col">是否公开</th><th scope="col">标签</th>
+          <th scope="col">名称</th><th scope="col">分类</th><th scope="col">游客访问</th><th scope="col">标签</th>
           <th scope="col">更新时间（北京时间）</th><th scope="col">操作</th></tr></thead>
         <tbody>{rows.map((tool) => <tr key={tool.id}>
           <td className={styles.selectColumn}><input type="checkbox" aria-label={`选择工具 ${tool.name}`} checked={selected.has(tool.id)}
@@ -61,7 +61,9 @@ export default function ToolSelectionTable({ rows, total, page, pages, first, la
               return next;
             })} /></td>
           <th scope="row">{tool.name}</th><td>{tool.category}</td>
-          <td><span className={tool.is_public ? styles.publicBadge : styles.privateBadge}>{tool.is_public ? "公开" : "隐藏"}</span></td>
+          <td><span className={!tool.hide_from_guests ? styles.publicBadge : styles.privateBadge}>
+            {!tool.hide_from_guests ? "游客可见" : "仅登录可见"}
+          </span></td>
           <td>{tool.tool_tags.flatMap((item) => item.tags ? [item.tags.name] : []).join("、") || "—"}</td>
           <td>{formatAdminDate(tool.updated_at)}</td><td><div className={styles.rowActions}>
             <a className={styles.link} href={tool.url} target="_blank" rel="noopener noreferrer">访问</a>
@@ -72,9 +74,9 @@ export default function ToolSelectionTable({ rows, total, page, pages, first, la
       </table>
     </div>
     <ConfirmDialog open={targetVisibility !== null}
-      title={targetVisibility ? `公开所选 ${selected.size} 个工具吗？` : `隐藏所选 ${selected.size} 个工具吗？`}
-      description={targetVisibility ? "所选工具将出现在公开工具集和顶部导航中。" : "所选工具将从公开工具集和顶部导航中隐藏，后台数据不会删除。"}
-      confirmLabel={targetVisibility ? "确认公开" : "确认隐藏"} pending={pending} message={message}
+      title={targetVisibility ? `让游客看到所选 ${selected.size} 个工具吗？` : `将所选 ${selected.size} 个工具设为仅登录可见吗？`}
+      description={targetVisibility ? "未登录游客和已登录用户都能看到所选工具。" : "未登录游客看不到所选工具；登录用户仍可在工具集和顶部菜单中看到。"}
+      confirmLabel={targetVisibility ? "确认游客可见" : "确认仅登录可见"} pending={pending} message={message}
       onCancel={() => setTargetVisibility(null)} onConfirm={confirmVisibility} />
   </>;
 }

@@ -1,11 +1,16 @@
+import "server-only";
+
+import { cache } from "react";
 import type { Tool } from "@/data/tools";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
  * 从 Supabase 查询全部工具及其标签。
  */
-export async function getTools(): Promise<Tool[]> {
-  const supabase = createPublicSupabaseClient();
+export const getTools = cache(async function getTools(): Promise<Tool[]> {
+  // 携带当前会话，让数据库策略决定游客或登录用户的可见范围。
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("tools")
@@ -45,10 +50,10 @@ export async function getTools(): Promise<Tool[]> {
       ),
     };
   });
-}
+});
 
 /** 分类直接来自分类表，因此尚未绑定工具的新分类也能立即出现在公开界面。 */
-export async function getPublicToolCategories(): Promise<string[]> {
+export const getPublicToolCategories = cache(async function getPublicToolCategories(): Promise<string[]> {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("tool_categories")
@@ -57,7 +62,7 @@ export async function getPublicToolCategories(): Promise<string[]> {
 
   if (error) throw new Error(`读取工具分类失败：${error.message}`);
   return data.map((category) => category.name);
-}
+});
 
 /** 首页只读取常用工具，确保展示内容与后台管理保持一致。 */
 export async function getFavoriteTools(limit = 3): Promise<Tool[]> {

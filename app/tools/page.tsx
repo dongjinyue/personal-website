@@ -1,9 +1,15 @@
 import ToolExplorer from "@/components/ToolExplorer";
 import { getPublicToolCategories, getTools } from "@/lib/tool-repository";
+import type { Metadata } from "next";
 import styles from "../collection.module.css";
 
-// 工具公开状态需要随后台操作实时更新，不能在构建时固化。
+// 工具可见范围依赖当前会话，不能在构建时固化。
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "工具集 | MY SPACE",
+  description: "整理开发、学习和日常工作中反复使用的实用工具。",
+};
 
 /**
  * 工具页面是 Server Component（服务端组件）。

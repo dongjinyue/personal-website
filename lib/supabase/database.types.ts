@@ -218,6 +218,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          hide_from_guests: boolean
           is_favorite: boolean
           is_public: boolean
           name: string
@@ -229,6 +230,7 @@ export type Database = {
           created_at?: string
           description: string
           id: string
+          hide_from_guests?: boolean
           is_favorite?: boolean
           is_public?: boolean
           name: string
@@ -240,6 +242,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          hide_from_guests?: boolean
           is_favorite?: boolean
           is_public?: boolean
           name?: string

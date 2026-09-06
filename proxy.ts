@@ -6,5 +6,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/admin/:path*", "/tools"],
+  // 工具页由服务端查询读取现有会话，避免导航前重复刷新令牌。
+  matcher: ["/login", "/admin/:path*"],
 };

@@ -7,16 +7,17 @@ import styles from "./Header.module.css";
 
 const publicLinks = [
   { href: "/", label: "首页" },
+  { href: "/news", label: "AI 新闻" },
+  { href: "/projects", label: "项目" },
 ];
 
 type Props = {
   showAdmin: boolean;
-  projects: Array<{ name: string; slug: string }>;
   tools: Array<{ name: string; url: string; category: string }>;
   categories: string[];
 };
 
-export default function HeaderNavigation({ showAdmin, projects, tools, categories }: Props) {
+export default function HeaderNavigation({ showAdmin, tools, categories }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const toolGroups = categories.map((category) => [
@@ -27,6 +28,7 @@ export default function HeaderNavigation({ showAdmin, projects, tools, categorie
   return (
     <nav className={styles.navigation} aria-label="主要导航">
       <GuardedLink className={styles.brand} href="/" onNavigate={() => setOpen(false)}>MY SPACE</GuardedLink>
+      <span className={styles.tagline}>每天几分钟，读懂 AI 新变化。</span>
       <button className={styles.menuButton} type="button" aria-expanded={open}
         aria-controls="primary-navigation-links" onClick={() => setOpen((value) => !value)}>
         <span aria-hidden="true">{open ? "×" : "≡"}</span>
@@ -42,21 +44,10 @@ export default function HeaderNavigation({ showAdmin, projects, tools, categorie
             aria-current={active ? "page" : undefined}>{item.label}</GuardedLink>;
         })}
         <div className={styles.navItem}>
-          <GuardedLink href="/projects" onNavigate={() => setOpen(false)}
-            aria-current={pathname === "/projects" || pathname.startsWith("/projects/") ? "page" : undefined}>项目</GuardedLink>
-          <div className={styles.dropdown} aria-label="公开项目快捷入口">
-            <p>最近公开项目</p>
-            {projects.map((project) => <GuardedLink key={project.slug} href={`/projects/${project.slug}`}
-              onNavigate={() => setOpen(false)}>{project.name}</GuardedLink>)}
-            {projects.length === 0 && <span>暂无公开项目</span>}
-            <GuardedLink className={styles.dropdownAll} href="/projects" onNavigate={() => setOpen(false)}>查看全部项目 →</GuardedLink>
-          </div>
-        </div>
-        <div className={styles.navItem}>
           <GuardedLink href="/tools" onNavigate={() => setOpen(false)}
             aria-current={pathname === "/tools" ? "page" : undefined}>工具集</GuardedLink>
-          <div className={`${styles.dropdown} ${styles.megaDropdown}`} aria-label="按分类浏览公开工具">
-            <p className={styles.megaTitle}>公开工具分类</p>
+          <div className={`${styles.dropdown} ${styles.megaDropdown}`} aria-label="按分类浏览可见工具">
+            <p className={styles.megaTitle}>工具分类</p>
             {toolGroups.length > 0 ? (
               <div className={styles.megaGrid}>
                 {toolGroups.map(([category, categoryTools]) => (
@@ -70,13 +61,14 @@ export default function HeaderNavigation({ showAdmin, projects, tools, categorie
                         <a key={tool.url} href={tool.url} target="_blank" rel="noopener noreferrer">
                           {tool.name}<span aria-hidden="true"> ↗</span>
                         </a>
-                      )) : <span className={styles.megaGroupEmpty}>暂无公开工具</span>}
+                      )) : <span className={styles.megaGroupEmpty}>暂无可见工具</span>}
                     </div>
                   </section>
                 ))}
               </div>
-            ) : <span className={styles.megaEmpty}>暂无公开工具</span>}
-            <GuardedLink className={styles.dropdownAll} href="/tools" onNavigate={() => setOpen(false)}>查看全部工具 →</GuardedLink>
+            ) : <span className={styles.megaEmpty}>暂无可见工具</span>}
+            <GuardedLink className={styles.dropdownAll} href="/tools"
+              onNavigate={() => setOpen(false)}>查看全部工具 →</GuardedLink>
           </div>
         </div>
         {showAdmin ? (

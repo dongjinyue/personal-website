@@ -19,10 +19,11 @@ export default async function NewToolPage({ searchParams }: Props) {
   return (
     <section className={styles.panel} aria-labelledby="new-tool-title">
       <h1 className={styles.heading} id="new-tool-title">新增工具</h1>
-      <p className={styles.hint}>新工具默认隐藏，可在工具列表中设为公开；不要填写私密内容。</p>
+      <p className={styles.hint}>新工具默认对所有人可见；可按需要设置为仅登录用户可见。</p>
       <ToolForm mode="create" id={randomUUID()} version="" returnPage={returnPage}
         categories={categories.map((category) => category.name)}
-        initial={{ name: "", description: "", url: "", category: categories[0]?.name ?? "", is_favorite: false }} />
+        initial={{ name: "", description: "", url: "", category: categories[0]?.name ?? "",
+          is_favorite: false, hide_from_guests: false }} />
     </section>
   );
 }

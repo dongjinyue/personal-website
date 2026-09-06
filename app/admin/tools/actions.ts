@@ -29,8 +29,8 @@ function validVersion(version: string) {
   return Boolean(version) && Number.isFinite(Date.parse(version));
 }
 
-/** 批量公开或隐藏工具；使用版本条件避免覆盖较新的编辑。 */
-export async function setToolsVisibility(
+/** 批量设置游客可见性；已登录用户不受该字段限制。 */
+export async function setToolsGuestVisibility(
   items: Array<{ id: string; updatedAt: string }>,
   visible: boolean,
 ) {
@@ -47,21 +47,23 @@ export async function setToolsVisibility(
     const supabase = await createSupabaseServerClient(true);
     for (const item of items) {
       const { data, error } = await supabase.from("tools")
-        .update({ is_public: visible })
+        .update({ hide_from_guests: !visible })
         .eq("id", item.id)
         .eq("updated_at", item.updatedAt)
         .select("id")
         .maybeSingle();
       if (error || !data) {
-        return { ok: false, message: "部分工具未修改，请刷新列表核对实际公开状态。" };
+        return { ok: false, message: "部分工具未修改，请刷新列表核对游客可见状态。" };
       }
     }
   } catch {
-    return { ok: false, message: "没有收到完整确认，请刷新列表核对实际公开状态。" };
+    return { ok: false, message: "没有收到完整确认，请刷新列表核对游客可见状态。" };
   }
 
   invalidateTools();
-  return { ok: true, message: visible ? `已公开 ${items.length} 个工具。` : `已隐藏 ${items.length} 个工具。` };
+  return { ok: true, message: visible
+    ? `已让 ${items.length} 个工具对游客可见。`
+    : `已将 ${items.length} 个工具设为仅登录可见。` };
 }
 
 export async function saveTool(

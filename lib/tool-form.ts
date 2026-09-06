@@ -4,6 +4,7 @@ export type ToolFields = {
   url: string;
   category: string;
   is_favorite: boolean;
+  hide_from_guests: boolean;
 };
 
 export type FieldErrors = Partial<Record<keyof ToolFields, string>>;
@@ -32,6 +33,7 @@ export function parseToolForm(formData: FormData) {
     url: text("url"),
     category: text("category"),
     is_favorite: formData.get("is_favorite") === "on",
+    hide_from_guests: formData.get("hide_from_guests") === "on",
   };
   const errors: FieldErrors = {};
 

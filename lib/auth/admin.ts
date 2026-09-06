@@ -2,6 +2,7 @@ import "server-only";
 
 import { isAuthSessionMissingError } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** 配置错误时停止，不把缺少配置解释成“所有人都能进入”。 */
@@ -19,7 +20,7 @@ export function isAdmin(userId: string) {
 }
 
 /** 向 Auth 服务确认用户，不直接信任客户端传入的身份。 */
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -31,7 +32,18 @@ export async function getCurrentUser() {
     throw new Error("暂时无法确认登录状态，请稍后重试。");
   }
   return data.user;
-}
+});
+
+/** 仅用于公开导航分支；本地验证会话声明，减少每次跳转访问 Auth 服务。 */
+export const getCurrentUserIdFromClaims = cache(async function getCurrentUserIdFromClaims() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error) {
+    if (isAuthSessionMissingError(error) || error.status === 401 || error.status === 403) return null;
+    throw new Error("暂时无法确认登录状态，请稍后重试。");
+  }
+  return typeof data?.claims.sub === "string" ? data.claims.sub : null;
+});
 
 /** 页面使用跳转；以后每个敏感操作也必须重新调用授权检查。 */
 export async function requireAdmin() {

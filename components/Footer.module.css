@@ -6,17 +6,17 @@
 
 .inner {
   width: min(var(--content-width), calc(100% - 48px));
-  min-height: 104px;
+  min-height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 24px;
   margin: 0 auto;
 }
 
 .inner p {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 600px) {

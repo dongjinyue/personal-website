@@ -24,7 +24,8 @@ export default async function EditToolPage({ params, searchParams }: Props) {
       <ToolForm mode="edit" id={tool.id} version={tool.updated_at} returnPage={returnPage}
         categories={categories.map((category) => category.name)}
         initial={{ name: tool.name, description: tool.description, url: tool.url,
-          category: tool.category, is_favorite: tool.is_favorite }} />
+          category: tool.category, is_favorite: tool.is_favorite,
+          hide_from_guests: tool.hide_from_guests }} />
     </section>
   );
 }

@@ -40,7 +40,7 @@ export default async function AdminToolsPage({ searchParams }: Props) {
       <div className={styles.pageHeading}>
         <div>
           <h1 className={styles.heading} id="tools-title" tabIndex={-1}>工具管理</h1>
-          <p className={styles.hint}>每页最多 10 条，按最近更新时间排序。</p>
+          <p className={styles.hint}>每页最多 10 条；可控制工具对游客显示，登录用户始终可见。</p>
         </div>
         <GuardedLink className={`${styles.buttonLink} ${styles.primaryButton}`}
           href={`/admin/tools/new?page=${result.page}`}>新增工具</GuardedLink>
@@ -61,7 +61,8 @@ export default async function AdminToolsPage({ searchParams }: Props) {
       {!!result.rows.length && <div className={styles.mobileList} aria-label="工具管理列表">
         {result.rows.map((tool) => <article className={styles.mobileRecord} key={tool.id}>
           <h2>{tool.name}</h2><dl className={styles.mobileMeta}>
-            <dt>分类</dt><dd>{tool.category}</dd><dt>是否公开</dt><dd>{tool.is_public ? "公开" : "隐藏"}</dd>
+            <dt>分类</dt><dd>{tool.category}</dd><dt>游客访问</dt>
+            <dd>{tool.hide_from_guests ? "仅登录可见" : "游客可见"}</dd>
             <dt>标签</dt><dd>{tool.tool_tags.flatMap((item) => item.tags ? [item.tags.name] : []).join("、") || "—"}</dd>
             <dt>更新时间</dt><dd>{formatAdminDate(tool.updated_at)}</dd></dl>
           <div className={styles.rowActions}><a className={styles.link} href={tool.url} target="_blank" rel="noopener noreferrer">访问</a>
@@ -79,7 +80,7 @@ export default async function AdminToolsPage({ searchParams }: Props) {
           href={`/admin/tools?page=${result.page + 1}`}>下一页</GuardedLink>
           : <span className={styles.disabledPage}>下一页</span>}
       </nav>
-      <p><GuardedLink className={styles.link} href="/tools">查看公开工具页</GuardedLink></p>
+      <p><GuardedLink className={styles.link} href="/tools">查看工具集</GuardedLink></p>
     </section>
   );
 }

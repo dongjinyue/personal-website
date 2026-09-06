@@ -35,6 +35,7 @@ export default function ToolForm({ mode, id, version, initial, returnPage, categ
     || values.url !== initial.url
     || values.category !== initial.category
     || values.is_favorite !== initial.is_favorite
+    || values.hide_from_guests !== initial.hide_from_guests
   ), [initial, values]);
 
   useEffect(() => {
@@ -122,6 +123,14 @@ export default function ToolForm({ mode, id, version, initial, returnPage, categ
           onChange={(event) => update("is_favorite", event.target.checked)} />
         <span>收藏此工具</span>
       </label>
+
+      <label className={styles.choice}>
+        <input type="checkbox" name="hide_from_guests" value="on"
+          checked={values.hide_from_guests}
+          onChange={(event) => update("hide_from_guests", event.target.checked)} />
+        <span>对未登录游客隐藏</span>
+      </label>
+      <p className={styles.hint}>开启后，已登录用户仍能在工具集和顶部工具菜单中看到。</p>
 
       <p className={styles.formMessage} data-form-status tabIndex={-1}
         role="status" aria-live="polite">{state.message}</p>

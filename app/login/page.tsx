@@ -18,7 +18,7 @@ export default async function LoginPage() {
   return (
     <main className={styles.panel}>
       <h1>管理员登录</h1>
-      <p className={styles.hint}>只有指定管理员可以进入后台，公开工具页无需登录。</p>
+      <p className={styles.hint}>只有指定管理员可以进入后台；登录后也能查看仅登录可见的工具。</p>
       {user && (
         <section aria-label="当前账号状态">
           <p>当前账号没有管理员权限，请退出后使用管理员账号。</p>
