@@ -9,7 +9,7 @@ import styles from "../admin.module.css";
 
 export const metadata: Metadata = { title: "项目管理" };
 type Props = { searchParams: Promise<{ page?: string | string[]; notice?: string | string[] }> };
-const notices = { created: "私有项目已创建。", updated: "项目已更新。", deleted: "项目已删除。" };
+const notices = { created: "项目已创建。", updated: "项目已更新。", deleted: "项目已删除。" };
 
 export default async function AdminProjectsPage({ searchParams }: Props) {
   const query = await searchParams;
@@ -22,7 +22,7 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
   const first = result.total ? (result.page - 1) * 10 + 1 : 0;
   return <section className={styles.panel} aria-labelledby="projects-title">
     <div className={styles.pageHeading}><div><h1 className={styles.heading} id="projects-title" tabIndex={-1}>项目管理</h1>
-      <p className={styles.hint}>后台显示全部项目；新建项目默认私有，公开需在编辑页单独确认。</p></div>
+      <p className={styles.hint}>后台显示全部项目；可控制项目对游客显示，登录用户始终可见。</p></div>
       <GuardedLink className={`${styles.buttonLink} ${styles.primaryButton}`} href={`/admin/projects/new?page=${result.page}`}>新增项目</GuardedLink></div>
     <p className={styles.notice} role="status" aria-live="polite">{notice ? notices[notice] : ""}</p>
     {!result.rows.length ? <div className={styles.state}><p>还没有项目。</p></div> :
@@ -31,10 +31,10 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
       {result.rows.map((project) => <article className={styles.mobileRecord} key={project.id}>
         <h2>{project.name}</h2><dl className={styles.mobileMeta}>
           <dt>Slug</dt><dd>{project.slug}</dd>
-          <dt>是否公开</dt><dd>{project.is_public ? "公开" : "隐藏"}</dd>
+          <dt>游客访问</dt><dd>{project.hide_from_guests ? "仅登录可见" : "游客可见"}</dd>
           <dt>首页推荐</dt><dd>{project.is_featured ? "推荐" : "不推荐"}</dd>
           <dt>更新时间</dt><dd>{formatAdminDate(project.updated_at)}</dd></dl>
-        <div className={styles.rowActions}>{project.is_public && <GuardedLink className={styles.link} href={`/projects/${project.slug}`}>查看</GuardedLink>}
+        <div className={styles.rowActions}><GuardedLink className={styles.link} href={`/projects/${project.slug}`}>查看</GuardedLink>
           <GuardedLink className={styles.link} href={`/admin/projects/${project.id}/edit?page=${result.page}`}>编辑</GuardedLink>
           <DeleteProjectButton id={project.id} name={project.name} updatedAt={project.updated_at} page={result.page} /></div>
       </article>)}
@@ -43,6 +43,6 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
       {result.page > 1 ? <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${result.page - 1}`}>上一页</GuardedLink> : <span className={styles.disabledPage}>上一页</span>}
       <span>第 {result.page}/{result.pages} 页</span>
       {result.page < result.pages ? <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${result.page + 1}`}>下一页</GuardedLink> : <span className={styles.disabledPage}>下一页</span>}
-    </nav><p><GuardedLink className={styles.link} href="/projects">查看公开项目页</GuardedLink></p>
+    </nav><p><GuardedLink className={styles.link} href="/projects">查看项目页</GuardedLink></p>
   </section>;
 }

@@ -9,9 +9,9 @@ import { projectStatuses, type ProjectActionState, type ProjectFields } from "@/
 import styles from "@/app/admin/admin.module.css";
 
 type Props = { mode: "create" | "edit"; id: string; version: string;
-  initial: ProjectFields; returnPage: number; isPublic: boolean };
+  initial: ProjectFields; returnPage: number };
 
-export default function ProjectForm({ mode, id, version, initial, returnPage, isPublic }: Props) {
+export default function ProjectForm({ mode, id, version, initial, returnPage }: Props) {
   const [values, setValues] = useState(initial);
   const [edited, setEdited] = useState<Partial<Record<keyof ProjectFields, number>>>({});
   const formRef = useRef<HTMLFormElement>(null);
@@ -74,12 +74,15 @@ export default function ProjectForm({ mode, id, version, initial, returnPage, is
     {textField("project_url", "项目网址（可选）", { maxLength: 2048, type: "url" })}
     {textField("github_url", "代码仓库网址（可选）", { maxLength: 2048, type: "url" })}
     <label className={styles.choice}><input type="checkbox" name="is_featured" checked={values.is_featured}
-      onChange={(event) => update("is_featured", event.target.checked)} /><span>在首页推荐（仅公开项目会展示）</span></label>
-    {mode === "edit" && isPublic && <p className={styles.warning}>此项目已公开，保存后访客会立即看到更新内容。</p>}
+      onChange={(event) => update("is_featured", event.target.checked)} /><span>在首页推荐（仅游客可见项目会展示）</span></label>
+    <label className={styles.choice}><input type="checkbox" name="hide_from_guests" checked={values.hide_from_guests}
+      onChange={(event) => update("hide_from_guests", event.target.checked)} />
+      <span>对未登录游客隐藏</span></label>
+    <p className={styles.hint}>开启后游客看不到该项目，登录用户仍可在项目页和顶部菜单中访问。</p>
     <p className={styles.formMessage} data-form-status tabIndex={-1} role="status" aria-live="polite">{state.message}</p>
     <div className={styles.formActions}>
       <button className={`${styles.button} ${styles.primaryButton}`} disabled={pending}>
-        {pending ? "正在保存…" : mode === "create" ? "创建私有项目" : "保存修改"}
+        {pending ? "正在保存…" : mode === "create" ? "创建项目" : "保存修改"}
       </button>
       <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${returnPage}`}>取消</GuardedLink>
     </div>

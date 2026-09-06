@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UnsavedChangesProvider from "@/components/admin/UnsavedChangesProvider";
 import { getCurrentUserIdFromClaims, isAdmin } from "@/lib/auth/admin";
+import { getNavigationPublicProjects } from "@/lib/project-repository";
 import { getNavigationPublicTools, getPublicToolCategories } from "@/lib/tool-repository";
 import "./globals.css";
 export default async function RootLayout({
@@ -13,9 +14,11 @@ export default async function RootLayout({
   let showAdmin = false;
   let navigationTools: Array<{ name: string; url: string; category: string }> = [];
   let navigationCategories: string[] = [];
+  let navigationProjects: Array<{ name: string; slug: string }> = [];
   // 身份与导航内容并行读取，避免每次页面跳转串行等待多个网络请求。
-  const [userResult, toolsResult, categoriesResult] = await Promise.allSettled([
-    getCurrentUserIdFromClaims(), getNavigationPublicTools(), getPublicToolCategories(),
+  const [userResult, projectsResult, toolsResult, categoriesResult] = await Promise.allSettled([
+    getCurrentUserIdFromClaims(), getNavigationPublicProjects(),
+    getNavigationPublicTools(), getPublicToolCategories(),
   ]);
   if (userResult.status === "fulfilled") {
     try { showAdmin = Boolean(userResult.value && isAdmin(userResult.value)); }
@@ -23,12 +26,13 @@ export default async function RootLayout({
   }
   if (toolsResult.status === "fulfilled") navigationTools = toolsResult.value;
   if (categoriesResult.status === "fulfilled") navigationCategories = categoriesResult.value;
+  if (projectsResult.status === "fulfilled") navigationProjects = projectsResult.value;
 
   return (
     <html lang="zh-CN">
       <body>
         <UnsavedChangesProvider>
-          <Header showAdmin={showAdmin} tools={navigationTools}
+          <Header showAdmin={showAdmin} projects={navigationProjects} tools={navigationTools}
             categories={navigationCategories} />
           {children}
           <Footer />

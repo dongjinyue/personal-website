@@ -11,7 +11,7 @@ import styles from "@/app/admin/admin.module.css";
 
 type Row = {
   id: string; name: string; url: string; category: string;
-  is_public: boolean; hide_from_guests: boolean; updated_at: string;
+  hide_from_guests: boolean; updated_at: string;
   tool_tags: Array<{ tags: { name: string } | null }>;
 };
 type Props = { rows: Row[]; total: number; page: number; pages: number; first: number; last: number };

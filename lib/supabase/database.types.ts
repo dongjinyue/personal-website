@@ -104,6 +104,7 @@ export type Database = {
           created_at: string
           description: string
           github_url: string | null
+          hide_from_guests: boolean
           id: string
           is_featured: boolean
           is_public: boolean
@@ -119,6 +120,7 @@ export type Database = {
           created_at?: string
           description: string
           github_url?: string | null
+          hide_from_guests?: boolean
           id: string
           is_featured?: boolean
           is_public?: boolean
@@ -134,6 +136,7 @@ export type Database = {
           created_at?: string
           description?: string
           github_url?: string | null
+          hide_from_guests?: boolean
           id?: string
           is_featured?: boolean
           is_public?: boolean

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setProjectsVisibility } from "@/app/admin/projects/actions";
+import { setProjectsGuestVisibility } from "@/app/admin/projects/actions";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import DeleteProjectButton from "@/components/admin/DeleteProjectButton";
 import GuardedLink from "@/components/admin/GuardedLink";
@@ -13,7 +13,7 @@ type Row = {
   id: string;
   slug: string;
   name: string;
-  is_public: boolean;
+  hide_from_guests: boolean;
   is_featured: boolean;
   updated_at: string;
 };
@@ -37,7 +37,7 @@ export default function ProjectSelectionTable({ rows, total, page, first }: Prop
   function confirmVisibility() {
     if (targetVisibility === null || pending) return;
     startTransition(async () => {
-      const result = await setProjectsVisibility(selectedItems, targetVisibility);
+      const result = await setProjectsGuestVisibility(selectedItems, targetVisibility);
       setMessage(result.message);
       if (!result.ok) return;
       setTargetVisibility(null);
@@ -51,11 +51,11 @@ export default function ProjectSelectionTable({ rows, total, page, first }: Prop
       <span>已选择 {selected.size} 项</span>
       <button type="button" className={`${styles.button} ${styles.primaryButton}`}
         disabled={selected.size === 0 || pending} onClick={() => { setMessage(""); setTargetVisibility(true); }}>
-        设为公开
+        游客可见
       </button>
       <button type="button" className={styles.button}
         disabled={selected.size === 0 || pending} onClick={() => { setMessage(""); setTargetVisibility(false); }}>
-        设为隐藏
+        仅登录可见
       </button>
     </div>
     <p className={styles.notice} role="status" aria-live="polite">{message}</p>
@@ -66,7 +66,7 @@ export default function ProjectSelectionTable({ rows, total, page, first }: Prop
         <thead><tr>
           <th scope="col" className={styles.selectColumn}><input type="checkbox"
             aria-label="选择当前页全部项目" checked={allSelected} onChange={toggleAll} /></th>
-          <th scope="col">名称</th><th scope="col">Slug</th><th scope="col">是否公开</th>
+          <th scope="col">名称</th><th scope="col">Slug</th><th scope="col">游客访问</th>
           <th scope="col">首页推荐</th><th scope="col">更新时间（北京时间）</th><th scope="col">操作</th>
         </tr></thead>
         <tbody>{rows.map((project) => <tr key={project.id}>
@@ -75,20 +75,22 @@ export default function ProjectSelectionTable({ rows, total, page, first }: Prop
               const next = new Set(current); if (next.has(project.id)) next.delete(project.id); else next.add(project.id); return next;
             })} /></td>
           <th scope="row">{project.name}</th><td>{project.slug}</td>
-          <td><span className={project.is_public ? styles.publicBadge : styles.privateBadge}>{project.is_public ? "公开" : "隐藏"}</span></td>
+          <td><span className={!project.hide_from_guests ? styles.publicBadge : styles.privateBadge}>
+            {!project.hide_from_guests ? "游客可见" : "仅登录可见"}
+          </span></td>
           <td>{project.is_featured ? "推荐" : "不推荐"}</td><td>{formatAdminDate(project.updated_at)}</td>
-          <td><div className={styles.rowActions}>{project.is_public && <GuardedLink className={styles.link} href={`/projects/${project.slug}`}>查看</GuardedLink>}
+          <td><div className={styles.rowActions}><GuardedLink className={styles.link} href={`/projects/${project.slug}`}>查看</GuardedLink>
             <GuardedLink className={styles.link} href={`/admin/projects/${project.id}/edit?page=${page}`}>编辑</GuardedLink>
             <DeleteProjectButton id={project.id} name={project.name} updatedAt={project.updated_at} page={page} /></div></td>
         </tr>)}</tbody>
       </table>
     </div>
     <ConfirmDialog open={targetVisibility !== null}
-      title={targetVisibility ? `公开所选 ${selected.size} 个项目吗？` : `隐藏所选 ${selected.size} 个项目吗？`}
+      title={targetVisibility ? `让游客看到所选 ${selected.size} 个项目吗？` : `将所选 ${selected.size} 个项目设为仅登录可见吗？`}
       description={targetVisibility
-        ? "所选项目的名称、说明、链接、亮点和标签将对所有访客可见。"
-        : "所选项目将从公开列表和详情页隐藏，后台数据不会删除。"}
-      confirmLabel={targetVisibility ? "确认公开" : "确认隐藏"} pending={pending} message={message}
+        ? "未登录游客和已登录用户都能看到所选项目。"
+        : "未登录游客看不到所选项目；登录用户仍可在项目页和顶部菜单中看到。"}
+      confirmLabel={targetVisibility ? "确认游客可见" : "确认仅登录可见"} pending={pending} message={message}
       onCancel={() => setTargetVisibility(null)} onConfirm={confirmVisibility} />
   </>;
 }

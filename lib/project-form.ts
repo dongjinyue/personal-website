@@ -10,6 +10,7 @@ export type ProjectFields = {
   project_url: string;
   github_url: string;
   is_featured: boolean;
+  hide_from_guests: boolean;
 };
 
 export type ProjectErrors = Partial<Record<keyof ProjectFields, string>>;
@@ -46,6 +47,7 @@ export function parseProjectForm(formData: FormData) {
     project_url: text("project_url"),
     github_url: text("github_url"),
     is_featured: formData.get("is_featured") === "on",
+    hide_from_guests: formData.get("hide_from_guests") === "on",
   };
   const errors: ProjectErrors = {};
 

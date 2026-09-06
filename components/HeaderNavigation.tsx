@@ -8,16 +8,16 @@ import styles from "./Header.module.css";
 const publicLinks = [
   { href: "/", label: "首页" },
   { href: "/news", label: "AI 新闻" },
-  { href: "/projects", label: "项目" },
 ];
 
 type Props = {
   showAdmin: boolean;
+  projects: Array<{ name: string; slug: string }>;
   tools: Array<{ name: string; url: string; category: string }>;
   categories: string[];
 };
 
-export default function HeaderNavigation({ showAdmin, tools, categories }: Props) {
+export default function HeaderNavigation({ showAdmin, projects, tools, categories }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const toolGroups = categories.map((category) => [
@@ -43,6 +43,19 @@ export default function HeaderNavigation({ showAdmin, tools, categories }: Props
             onNavigate={() => setOpen(false)}
             aria-current={active ? "page" : undefined}>{item.label}</GuardedLink>;
         })}
+        <div className={styles.navItem}>
+          <GuardedLink href="/projects" onNavigate={() => setOpen(false)}
+            aria-current={pathname === "/projects" || pathname.startsWith("/projects/") ? "page" : undefined}>项目</GuardedLink>
+          <div className={`${styles.dropdown} ${styles.projectDropdown}`} aria-label="最近可见项目">
+            <p>最近项目</p>
+            {projects.length > 0 ? projects.map((project) => (
+              <GuardedLink key={project.slug} href={`/projects/${project.slug}`}
+                onNavigate={() => setOpen(false)}>{project.name}</GuardedLink>
+            )) : <span>暂无可见项目</span>}
+            <GuardedLink className={styles.dropdownAll} href="/projects"
+              onNavigate={() => setOpen(false)}>查看全部项目 →</GuardedLink>
+          </div>
+        </div>
         <div className={styles.navItem}>
           <GuardedLink href="/tools" onNavigate={() => setOpen(false)}
             aria-current={pathname === "/tools" ? "page" : undefined}>工具集</GuardedLink>

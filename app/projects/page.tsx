@@ -7,7 +7,7 @@ import styles from "../collection.module.css";
 
 export const metadata: Metadata = {
   title: "项目",
-  description: "查看我正在构建和已经完成的公开项目。",
+  description: "查看我正在构建、已经完成和持续打磨的项目。",
 };
 
 export const dynamic = "force-dynamic";
@@ -29,17 +29,17 @@ export default async function ProjectsPage({ searchParams }: Props) {
       <header className={styles.heading}>
         <p className={styles.eyebrow}>PROJECTS</p>
         <h1>项目</h1>
-        <p className={styles.intro}>记录正在构建、已经完成和持续打磨的公开作品。</p>
+        <p className={styles.intro}>记录正在构建、已经完成和持续打磨的作品。</p>
       </header>
 
       {result.projects.length === 0 ? (
         <section className={styles.emptyState}>
-          <h2>暂时没有公开项目</h2>
+          <h2>暂时没有可见项目</h2>
           <p>项目准备好后会出现在这里。</p>
         </section>
       ) : (
         <>
-          <section className={styles.grid} aria-label={`公开项目，共 ${result.total} 个`}>
+          <section className={styles.grid} aria-label={`可见项目，共 ${result.total} 个`}>
             {result.projects.map((project) => (
               <ProjectCard key={project.id} title={project.name}
                 description={project.description} slug={project.slug}

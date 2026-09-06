@@ -92,6 +92,10 @@
   transform: none;
 }
 
+.projectDropdown {
+  width: 19rem;
+}
+
 .megaGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));

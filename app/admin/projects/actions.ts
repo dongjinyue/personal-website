@@ -64,24 +64,8 @@ export async function saveProject(
   redirect(`/admin/projects?page=1&notice=${mode === "create" ? "created" : "updated"}`);
 }
 
-export async function setProjectVisibility(id: string, version: string, visible: boolean) {
-  const denied = await checkProjectWriter();
-  if (denied) return { ok: false, message: denied };
-  if (!validProjectId(id) || !validVersion(version) || typeof visible !== "boolean") {
-    return { ok: false, message: "公开状态参数无效。" };
-  }
-  try {
-    const supabase = await createSupabaseServerClient(true);
-    const { data, error } = await supabase.from("projects").update({ is_public: visible })
-      .eq("id", id).eq("updated_at", version).select("id").maybeSingle();
-    if (error || !data) return { ok: false, message: "修改未获确认，请核对权限、版本和当前状态。" };
-  } catch { return { ok: false, message: "未收到确认，请先刷新列表核对实际公开状态。" }; }
-  invalidateProjects(id);
-  return { ok: true, message: visible ? "项目已公开。" : "项目已设为私有。" };
-}
-
-/** 批量切换公开状态；每条记录都带版本条件，避免覆盖他人刚完成的修改。 */
-export async function setProjectsVisibility(
+/** 批量设置游客可见性；登录用户不受该字段限制。 */
+export async function setProjectsGuestVisibility(
   items: Array<{ id: string; updatedAt: string }>,
   visible: boolean,
 ) {
@@ -98,21 +82,23 @@ export async function setProjectsVisibility(
     const supabase = await createSupabaseServerClient(true);
     for (const item of items) {
       const { data, error } = await supabase.from("projects")
-        .update({ is_public: visible })
+        .update({ hide_from_guests: !visible })
         .eq("id", item.id)
         .eq("updated_at", item.updatedAt)
         .select("id")
         .maybeSingle();
       if (error || !data) {
-        return { ok: false, message: "部分项目未修改，请刷新列表核对版本和实际公开状态。" };
+        return { ok: false, message: "部分项目未修改，请刷新列表核对版本和游客可见状态。" };
       }
       invalidateProjects(item.id);
     }
   } catch {
-    return { ok: false, message: "没有收到完整确认，请刷新列表核对实际公开状态。" };
+    return { ok: false, message: "没有收到完整确认，请刷新列表核对游客可见状态。" };
   }
 
-  return { ok: true, message: visible ? `已公开 ${items.length} 个项目。` : `已隐藏 ${items.length} 个项目。` };
+  return { ok: true, message: visible
+    ? `已让 ${items.length} 个项目对游客可见。`
+    : `已将 ${items.length} 个项目设为仅登录可见。` };
 }
 
 export async function deleteProject(id: string, version: string) {
