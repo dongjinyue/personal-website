@@ -7,6 +7,8 @@ import styles from "./Card.module.css";
 type ProjectCardProps = {
   title: string;
   description: string;
+  longDescription?: string;
+  highlights?: string[];
   slug?: string;
   status?: ProjectStatus;
   tags?: string[];
@@ -19,6 +21,8 @@ type ProjectCardProps = {
 export default function ProjectCard({
   title,
   description,
+  longDescription,
+  highlights,
   slug,
   status,
   tags,
@@ -27,34 +31,36 @@ export default function ProjectCard({
   githubUrl,
   headingLevel = "h2",
 }: ProjectCardProps) {
-  // 首页只传基础信息；列表页传入完整数据后才显示封面和元信息。
-  const showsCover = Boolean(
-    status || tags?.length || coverImage || projectUrl || githubUrl,
-  );
   const Heading = headingLevel;
 
   return (
     <article className={styles.card}>
-      {showsCover && (
+      {coverImage && (
         <div className={styles.cover}>
-          {coverImage ? (
-            <Image
-              src={coverImage}
-              alt={`${title} 项目封面`}
-              fill
-              sizes="(max-width: 600px) 100vw, 50vw"
-            />
-          ) : (
-            <div className={styles.coverFallback} aria-hidden="true">
-              <span>{title.slice(0, 2).toUpperCase()}</span>
-            </div>
-          )}
+          <Image
+            src={coverImage}
+            alt={`${title} 项目封面`}
+            fill
+            sizes="(max-width: 600px) 100vw, 50vw"
+          />
         </div>
       )}
 
       {status && <p className={styles.status}>{projectStatusLabels[status]}</p>}
       <Heading className={styles.title}>{title}</Heading>
       <p className={styles.description}>{description}</p>
+
+      {longDescription && longDescription !== description && (
+        <p className={styles.projectSummary}>{longDescription}</p>
+      )}
+
+      {highlights && highlights.length > 0 && (
+        <ul className={styles.highlights} aria-label={`${title} 项目亮点`}>
+          {highlights.slice(0, 2).map((highlight) => (
+            <li key={highlight}>{highlight}</li>
+          ))}
+        </ul>
+      )}
 
       {tags && tags.length > 0 && (
         <ul className={styles.tags} aria-label="项目标签">

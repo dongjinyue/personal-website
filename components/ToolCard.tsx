@@ -24,7 +24,7 @@ export default function ToolCard({
   const Heading = headingLevel;
 
   return (
-    <article className={styles.card}>
+    <article className={`${styles.card} ${styles.toolCard}`}>
       {(category || isFavorite) && (
         <p className={styles.meta}>
           {category && <span>{category}</span>}
@@ -34,19 +34,18 @@ export default function ToolCard({
       <Heading className={styles.title}>{name}</Heading>
       <p className={styles.description}>{description}</p>
 
-      {tags && tags.length > 0 && (
-        <ul className={styles.tags} aria-label={`${name} 标签`}>
-          {tags.map((tag) => (
-            <li key={tag}>{tag}</li>
-          ))}
-        </ul>
-      )}
-
-      <div className={styles.actions}>
+      <footer className={styles.toolFooter}>
+        {tags && tags.length > 0 ? (
+          <ul className={`${styles.tags} ${styles.toolTags}`} aria-label={`${name} 标签`}>
+            {tags.slice(0, 2).map((tag) => (
+              <li key={tag}>{tag}</li>
+            ))}
+          </ul>
+        ) : <span className={styles.toolCategory}>{category ?? "未分类"}</span>}
         <a className={styles.action} href={url} target="_blank" rel="noopener noreferrer">
           访问工具 <span aria-hidden="true">↗</span>
         </a>
-      </div>
+      </footer>
     </article>
   );
 }

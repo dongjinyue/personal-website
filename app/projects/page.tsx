@@ -43,6 +43,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
             {result.projects.map((project) => (
               <ProjectCard key={project.id} title={project.name}
                 description={project.description} slug={project.slug}
+                longDescription={project.longDescription} highlights={project.highlights}
                 status={project.status} tags={project.tags}
                 projectUrl={project.projectUrl} githubUrl={project.githubUrl} />
             ))}

@@ -11,9 +11,9 @@ import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import type { ToolCategoryRecord } from "@/lib/tool-category-repository";
 import styles from "@/app/admin/admin.module.css";
 
-type Props = { categories: ToolCategoryRecord[] };
+type Props = { categories: ToolCategoryRecord[]; total: number };
 
-export default function CategoryManager({ categories }: Props) {
+export default function CategoryManager({ categories, total }: Props) {
   const router = useRouter();
   const createInputRef = useRef<HTMLInputElement>(null);
   const deleteTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -68,7 +68,7 @@ export default function CategoryManager({ categories }: Props) {
       {categories.length > 0 ? (
         <div className={styles.tableWrap} tabIndex={0} aria-label="工具分类表格，可横向滚动">
           <table className={`${styles.table} ${styles.categoryTable}`}>
-            <caption>共 {categories.length} 个分类。分类改名后，相关工具会自动同步。</caption>
+            <caption>共 {total} 个分类。分类改名后，相关工具会自动同步。</caption>
             <thead><tr><th scope="col">分类名称</th><th scope="col">更新时间（北京时间）</th><th scope="col">操作</th></tr></thead>
             <tbody>
               {categories.map((category) => (

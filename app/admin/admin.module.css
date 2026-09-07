@@ -279,6 +279,8 @@
 .link:focus-visible,
 .button:focus-visible,
 .buttonLink:focus-visible,
+.paginationEdge:focus-visible,
+.pageNumber:focus-visible,
 .deleteTrigger:focus-visible,
 .textButton:focus-visible,
 .input:focus-visible,
@@ -484,16 +486,83 @@
   margin-block: 1.5rem;
 }
 
-.disabledPage {
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.paginationEdge,
+.paginationEdgeDisabled,
+.pageNumber,
+.currentPage,
+.paginationEllipsis {
   min-height: 2.75rem;
-  min-width: 8rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
-  border: 1px solid var(--line);
   border-radius: 0.5rem;
+}
+
+.paginationEdge,
+.paginationEdgeDisabled {
+  min-width: 6rem;
+  padding-inline: 1rem;
+  border: 1px solid var(--line);
+}
+
+.paginationEdge,
+.pageNumber {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.paginationEdge:hover,
+.pageNumber:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.paginationEdgeDisabled {
+  color: var(--muted);
   opacity: 0.65;
+}
+
+.pageNumber,
+.currentPage,
+.paginationEllipsis {
+  min-width: 2.75rem;
+  padding-inline: 0.5rem;
+}
+
+.pageNumber {
+  border: 1px solid var(--line);
+}
+
+.currentPage {
+  color: var(--surface);
+  border: 1px solid var(--foreground);
+  background: var(--foreground);
+  font-weight: 700;
+}
+
+.paginationEllipsis {
+  color: var(--muted);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .dialog {

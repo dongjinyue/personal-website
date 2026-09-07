@@ -40,7 +40,9 @@
 .input:focus-visible,
 .clearButton:focus-visible,
 .filterButton:focus-visible,
-.resetButton:focus-visible {
+.resetButton:focus-visible,
+.paginationEdge:focus-visible,
+.pageNumber:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
   outline-offset: 3px;
 }
@@ -114,8 +116,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   margin-top: 18px;
 }
 
@@ -142,6 +144,76 @@
 
 .resetButton {
   margin-top: 22px;
+}
+
+.pagination,
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pagination {
+  margin-top: 28px;
+}
+
+.paginationEdge,
+.pageNumber,
+.currentPage,
+.paginationEllipsis {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.paginationEdge,
+.pageNumber {
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.paginationEdge:hover:not(:disabled),
+.pageNumber:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.paginationEdge:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pageNumber,
+.currentPage,
+.paginationEllipsis {
+  min-width: 44px;
+}
+
+.currentPage {
+  color: var(--surface);
+  border: 1px solid var(--foreground);
+  background: var(--foreground);
+  font-weight: 700;
+}
+
+.paginationEllipsis {
+  color: var(--muted);
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {

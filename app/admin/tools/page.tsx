@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import GuardedLink from "@/components/admin/GuardedLink";
+import AdminPagination from "@/components/admin/AdminPagination";
 import DeleteToolButton from "@/components/admin/DeleteToolButton";
 import ToolSelectionTable from "@/components/admin/ToolSelectionTable";
 import { getAdminToolsPage } from "@/lib/admin-tools-repository";
@@ -71,15 +72,8 @@ export default async function AdminToolsPage({ searchParams }: Props) {
         </article>)}
       </div>}
 
-      <nav className={styles.pagination} aria-label="工具列表分页">
-        {result.page > 1 ? <GuardedLink className={styles.buttonLink}
-          href={`/admin/tools?page=${result.page - 1}`}>上一页</GuardedLink>
-          : <span className={styles.disabledPage}>上一页</span>}
-        <span>第 {result.page}/{result.pages} 页</span>
-        {result.page < result.pages ? <GuardedLink className={styles.buttonLink}
-          href={`/admin/tools?page=${result.page + 1}`}>下一页</GuardedLink>
-          : <span className={styles.disabledPage}>下一页</span>}
-      </nav>
+      <AdminPagination currentPage={result.page} pageCount={result.pages}
+        basePath="/admin/tools" label="工具列表分页" />
       <p><GuardedLink className={styles.link} href="/tools">查看工具集</GuardedLink></p>
     </section>
   );

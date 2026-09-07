@@ -57,7 +57,8 @@
 }
 
 .navItem:hover .dropdown,
-.navItem:focus-within .dropdown { display: grid; }
+.navItem:has(> a:focus-visible) .dropdown,
+.dropdown:focus-within { display: grid; }
 
 .dropdown p {
   margin: 0;

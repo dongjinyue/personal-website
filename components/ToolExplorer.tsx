@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { Tool } from "@/data/tools";
+import { getPaginationItems } from "@/lib/pagination";
 import ToolCard from "./ToolCard";
 import styles from "./ToolExplorer.module.css";
 
@@ -11,10 +12,12 @@ type ToolExplorerProps = {
 };
 
 type ToolFilterCategory = "全部" | string;
+const TOOL_PAGE_SIZE = 8;
 
 export default function ToolExplorer({ tools, categories: categoryOptions }: ToolExplorerProps) {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<ToolFilterCategory>("全部");
+  const [page, setPage] = useState(1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   // 分类按钮直接来自公开工具数据，管理员新增分类后无需修改代码。
   const categories: ToolFilterCategory[] = [
@@ -41,16 +44,26 @@ export default function ToolExplorer({ tools, categories: categoryOptions }: Too
 
     return matchesQuery && matchesCategory;
   });
+  const pageCount = Math.max(1, Math.ceil(filteredTools.length / TOOL_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageItems = getPaginationItems(currentPage, pageCount);
+  const visibleTools = filteredTools.slice(
+    (currentPage - 1) * TOOL_PAGE_SIZE,
+    currentPage * TOOL_PAGE_SIZE,
+  );
 
   function clearSearch() {
     setQuery("");
+    setPage(1);
     searchInputRef.current?.focus();
   }
 
   function resetFilters() {
     setQuery("");
     setActiveCategory("全部");
-    searchInputRef.current?.focus();
+    setPage(1);
+    // 清除按钮会随空状态一起卸载，下一帧再聚焦，避免焦点落回页面顶部。
+    requestAnimationFrame(() => searchInputRef.current?.focus());
   }
 
   if (tools.length === 0) {
@@ -75,7 +88,7 @@ export default function ToolExplorer({ tools, categories: categoryOptions }: Too
             id="tool-search"
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); setPage(1); }}
             placeholder="搜索名称、简介、分类或标签"
           />
           {query && (
@@ -97,7 +110,7 @@ export default function ToolExplorer({ tools, categories: categoryOptions }: Too
               key={category}
               type="button"
               aria-pressed={activeCategory === category}
-              onClick={() => setActiveCategory(category)}
+              onClick={() => { setActiveCategory(category); setPage(1); }}
             >
               {category}
             </button>
@@ -106,12 +119,12 @@ export default function ToolExplorer({ tools, categories: categoryOptions }: Too
       </div>
 
       <p className={styles.resultCount} aria-live="polite">
-        找到 {filteredTools.length} 个工具
+        找到 {filteredTools.length} 个工具，第 {currentPage}/{pageCount} 页
       </p>
 
       {filteredTools.length > 0 ? (
         <div className={styles.grid} aria-label="工具搜索结果">
-          {filteredTools.map((tool) => (
+          {visibleTools.map((tool) => (
             <ToolCard
               key={tool.id}
               name={tool.name}
@@ -131,6 +144,27 @@ export default function ToolExplorer({ tools, categories: categoryOptions }: Too
             清除全部筛选
           </button>
         </div>
+      )}
+
+      {filteredTools.length > 0 && (
+        <nav className={styles.pagination} aria-label="工具集分页">
+          <button type="button" className={styles.paginationEdge} disabled={currentPage === 1}
+            onClick={() => setPage((value) => Math.max(1, value - 1))}>上一页</button>
+          <div className={styles.pageNumbers}>
+            {pageItems.map((item) => typeof item === "number" ? (
+              item === currentPage ? (
+                <span className={styles.currentPage} aria-current="page" key={item}>{item}</span>
+              ) : (
+                <button type="button" className={styles.pageNumber} key={item}
+                  aria-label={`第 ${item} 页`} onClick={() => setPage(item)}>{item}</button>
+              )
+            ) : (
+              <span className={styles.paginationEllipsis} aria-hidden="true" key={item}>…</span>
+            ))}
+          </div>
+          <button type="button" className={styles.paginationEdge} disabled={currentPage === pageCount}
+            onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>下一页</button>
+        </nav>
       )}
     </section>
   );

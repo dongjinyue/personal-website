@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import GuardedLink from "@/components/admin/GuardedLink";
+import AdminPagination from "@/components/admin/AdminPagination";
 import DeleteProjectButton from "@/components/admin/DeleteProjectButton";
 import ProjectSelectionTable from "@/components/admin/ProjectSelectionTable";
 import { getAdminProjectsPage } from "@/lib/admin-projects-repository";
@@ -39,10 +40,8 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
           <DeleteProjectButton id={project.id} name={project.name} updatedAt={project.updated_at} page={result.page} /></div>
       </article>)}
     </div>}
-    <nav className={styles.pagination} aria-label="项目列表分页">
-      {result.page > 1 ? <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${result.page - 1}`}>上一页</GuardedLink> : <span className={styles.disabledPage}>上一页</span>}
-      <span>第 {result.page}/{result.pages} 页</span>
-      {result.page < result.pages ? <GuardedLink className={styles.buttonLink} href={`/admin/projects?page=${result.page + 1}`}>下一页</GuardedLink> : <span className={styles.disabledPage}>下一页</span>}
-    </nav><p><GuardedLink className={styles.link} href="/projects">查看项目页</GuardedLink></p>
+    <AdminPagination currentPage={result.page} pageCount={result.pages}
+      basePath="/admin/projects" label="项目列表分页" />
+    <p><GuardedLink className={styles.link} href="/projects">查看项目页</GuardedLink></p>
   </section>;
 }

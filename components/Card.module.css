@@ -8,6 +8,33 @@
   overflow: hidden;
 }
 
+.toolCard {
+  min-height: 236px;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: 14px;
+}
+
+.toolCard .title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 1.08rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.toolCard .description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 12px;
+  color: var(--foreground);
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .cover {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -18,20 +45,6 @@
 
 .cover img {
   object-fit: cover;
-}
-
-.coverFallback {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  background: linear-gradient(135deg, var(--accent-soft), var(--background));
-}
-
-.coverFallback span {
-  font: 800 clamp(2rem, 5vw, 3.4rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace;
-  letter-spacing: 0.08em;
 }
 
 .status {
@@ -73,6 +86,42 @@
   overflow-wrap: anywhere;
 }
 
+.projectSummary {
+  margin: 16px 0 0;
+  padding-top: 16px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.highlights {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  color: var(--foreground);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  list-style: none;
+}
+
+.highlights li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.highlights li::before {
+  content: "";
+  position: absolute;
+  top: 0.62em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -101,6 +150,40 @@
   margin-top: 24px;
 }
 
+.toolFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin: auto -24px -24px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--background) 48%, var(--surface));
+}
+
+.toolTags {
+  min-width: 0;
+  margin: 0;
+}
+
+.toolTags li {
+  padding: 5px 9px;
+  color: var(--accent);
+  border-color: transparent;
+  background: var(--accent-soft);
+}
+
+.toolCategory {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.toolFooter .action {
+  flex: 0 0 auto;
+  padding: 6px 0;
+  white-space: nowrap;
+}
+
 .action {
   display: inline-flex;
   margin-top: 0;
@@ -125,6 +208,10 @@
   .card {
     min-height: auto;
     padding: 24px;
+  }
+
+  .toolCard {
+    min-height: 220px;
   }
 
   .cover {
