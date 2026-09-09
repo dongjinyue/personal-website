@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Codex 隔离工作树，避免把完整工作副本误提交到仓库
+/.worktrees/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
