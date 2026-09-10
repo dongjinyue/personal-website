@@ -40,6 +40,9 @@ yarn-error.log*
 # Codex 隔离工作树，避免把完整工作副本误提交到仓库
 /.worktrees/
 
+# 本地设计讨论草图，由 brainstorming（需求梳理）工具生成
+/.superpowers/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
