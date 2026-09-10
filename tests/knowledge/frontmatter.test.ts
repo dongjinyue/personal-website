@@ -59,6 +59,63 @@ updated_at: "2026-09-10T12:00:00.000Z"
   }
 });
 
+test("拒绝未加引号的非闰年二月二十九日", () => {
+  const result = parseKnowledgeNote(
+    "notes/ai/non-leap-day.md",
+    `---
+title: 非闰年日期
+slug: non-leap-day
+visibility: public
+status: published
+tags: []
+created_at: 2025-02-29
+updated_at: 2026-09-10
+---
+正文`,
+  );
+
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.diagnostic.message, /created_at/);
+});
+
+test("拒绝未加引号的二月三十日", () => {
+  const result = parseKnowledgeNote(
+    "notes/ai/february-thirtieth.md",
+    `---
+title: 无效日期
+slug: february-thirtieth
+visibility: public
+status: published
+tags: []
+created_at: 2026-02-30
+updated_at: 2026-09-10
+---
+正文`,
+  );
+
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.diagnostic.message, /created_at/);
+});
+
+test("接受未加引号的有效闰日", () => {
+  const result = parseKnowledgeNote(
+    "notes/ai/leap-day.md",
+    `---
+title: 闰日
+slug: leap-day
+visibility: public
+status: published
+tags: []
+created_at: 2024-02-29
+updated_at: 2026-09-10
+---
+正文`,
+  );
+
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.note.createdAt, "2024-02-29");
+});
+
 test("拒绝缺少 slug 的 Frontmatter", () => {
   const result = parseKnowledgeNote("notes/ai/bad.md", "---\ntitle: Bad\n---\n正文");
 

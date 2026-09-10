@@ -1,5 +1,11 @@
 import matter from "gray-matter";
 
+// gray-matter 的间接依赖未提供 TypeScript 声明；只声明这里实际使用的 YAML API。
+const yaml = require("js-yaml") as {
+  JSON_SCHEMA: unknown;
+  load(value: string, options: { schema: unknown }): unknown;
+};
+
 import type {
   KnowledgeDiagnostic,
   KnowledgeNoteSource,
@@ -70,7 +76,15 @@ export function parseKnowledgeNote(path: string, markdown: string): ParseKnowled
   let parsed: ReturnType<typeof matter>;
 
   try {
-    parsed = matter(markdown);
+    parsed = matter(markdown, {
+      engines: {
+        // 禁用 YAML timestamp 自动转换，避免 2026-02-30 被 Date 悄然进位为 3 月 2 日。
+        yaml: {
+          parse: (value: string) =>
+            yaml.load(value, { schema: yaml.JSON_SCHEMA }) as Record<string, unknown>,
+        },
+      },
+    });
   } catch (error) {
     const detail = error instanceof Error ? error.message : "未知 YAML 解析错误";
     return invalidFrontmatter(path, `Frontmatter 无法解析：${detail}`);
