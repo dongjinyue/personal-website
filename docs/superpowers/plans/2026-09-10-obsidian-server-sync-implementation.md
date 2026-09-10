@@ -1,5 +1,15 @@
 # Obsidian 私有知识库服务器只读同步实施计划
 
+## 执行状态（2026-09-10）
+
+- 状态：已完成并通过端到端验证。
+- Deploy Key（部署密钥）：`Tencent Cloud Obsidian read-only sync`，GitHub 返回 `read_only: true` 与 `verified: true`。
+- 服务器目录：`/home/ubuntu/content/obsidian-vault`。
+- 首次同步提交：`a2bd8bfe05531a18244004affb933e2262a57362`。
+- Timer（定时器）：`obsidian-vault-sync.timer` 已启用且处于运行状态，并已自动成功执行一次。
+- 失败保护：服务器工作区存在本地文件时同步会拒绝执行；精确删除测试文件后可正常恢复。
+- 边界：网站尚未读取或公开知识库内容。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 让腾讯云服务器使用仓库专用的只读 Deploy Key，每 5 分钟安全同步一次 `dongjinyue/obsidian-vault` 到服务器本地目录。
