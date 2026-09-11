@@ -23,6 +23,7 @@ class MemorySource implements KnowledgeSource {
   files = new Map<string, Buffer>();
   failHead = false;
   failReads = false;
+  failNextReads = 0;
   listCalls = 0;
   readGates = new Map<string, Promise<void>>();
   activeReads = 0;
@@ -42,6 +43,10 @@ class MemorySource implements KnowledgeSource {
     this.activeReads += 1;
     this.maxActiveReads = Math.max(this.maxActiveReads, this.activeReads);
     try {
+      if (this.failNextReads > 0) {
+        this.failNextReads -= 1;
+        throw new Error("单次模拟读取失败");
+      }
       await this.readGates.get(commit);
       if (this.failReads) throw new Error("包含 C:\\绝对\\秘密路径");
       const value = this.files.get(filePath);
@@ -236,4 +241,62 @@ test("批量构建快照时限制同时进行的 Git 文件读取数", async () 
 
   assert.ok(observedMaximum > 0);
   assert.ok(observedMaximum <= 4, `同时读取了 ${observedMaximum} 个文件`);
+});
+
+test("失败后立即重试时，遗留读取与新构建共享同一并发上限", async () => {
+  const source = new MemorySource();
+  for (let index = 0; index < 12; index += 1) {
+    source.files.set(
+      `notes/group/retry-${index}.md`,
+      Buffer.from(validNote(`retry-${index}`)),
+    );
+  }
+  let releaseReads!: () => void;
+  source.readGates.set(
+    source.head,
+    new Promise<void>((resolve) => {
+      releaseReads = resolve;
+    }),
+  );
+  source.failNextReads = 1;
+  const store = createKnowledgeSnapshotStore(source);
+
+  await assert.rejects(() => store.getSnapshot(), /知识库快照构建失败/);
+  const retry = store.getSnapshot();
+  await new Promise((resolve) => setImmediate(resolve));
+  const observedMaximum = source.maxActiveReads;
+  releaseReads();
+  await retry;
+
+  assert.ok(observedMaximum <= 4, `重试期间同时读取了 ${observedMaximum} 个文件`);
+});
+
+test("不同提交同时构建时也共享同一读取并发上限", async () => {
+  const source = new MemorySource();
+  for (let index = 0; index < 12; index += 1) {
+    source.files.set(
+      `notes/group/commit-${index}.md`,
+      Buffer.from(validNote(`commit-${index}`)),
+    );
+  }
+  const firstCommit = source.head;
+  const secondCommit = "f".repeat(40);
+  let releaseReads!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseReads = resolve;
+  });
+  source.readGates.set(firstCommit, gate);
+  source.readGates.set(secondCommit, gate);
+  const store = createKnowledgeSnapshotStore(source);
+
+  const firstBuild = store.getSnapshot();
+  await new Promise((resolve) => setImmediate(resolve));
+  source.head = secondCommit;
+  const secondBuild = store.getSnapshot();
+  await new Promise((resolve) => setImmediate(resolve));
+  const observedMaximum = source.maxActiveReads;
+  releaseReads();
+  await Promise.all([firstBuild, secondBuild]);
+
+  assert.ok(observedMaximum <= 4, `跨提交同时读取了 ${observedMaximum} 个文件`);
 });

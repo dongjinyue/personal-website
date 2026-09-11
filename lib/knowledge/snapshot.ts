@@ -65,9 +65,43 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
+function createConcurrencyLimiter(limit: number) {
+  let active = 0;
+  const waiters: Array<() => void> = [];
+
+  async function acquire(): Promise<void> {
+    if (active < limit) {
+      active += 1;
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      waiters.push(() => {
+        active += 1;
+        resolve();
+      });
+    });
+  }
+
+  function release(): void {
+    active -= 1;
+    waiters.shift()?.();
+  }
+
+  return async function run<T>(operation: () => Promise<T>): Promise<T> {
+    await acquire();
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
+  };
+}
+
 async function buildSnapshot(
   source: KnowledgeSource,
   commit: string,
+  readText: (commit: string, path: string) => Promise<string>,
 ): Promise<KnowledgeSnapshot> {
   const files = (await source.listFiles(commit, "notes"))
     .filter((filePath) => filePath.startsWith("notes/") && filePath.endsWith(".md"))
@@ -75,7 +109,7 @@ async function buildSnapshot(
   const parsed = await mapWithConcurrency(
     files,
     KNOWLEDGE_READ_CONCURRENCY,
-    async (filePath) => parseKnowledgeNote(filePath, await source.readText(commit, filePath)),
+    async (filePath) => parseKnowledgeNote(filePath, await readText(commit, filePath)),
   );
 
   const diagnostics: KnowledgeDiagnostic[] = [];
@@ -124,6 +158,9 @@ export function createKnowledgeSnapshotStore(source: KnowledgeSource): Knowledge
     string,
     { promise: Promise<KnowledgeSnapshot>; acceptedGeneration: number }
   >();
+  const limitRead = createConcurrencyLimiter(KNOWLEDGE_READ_CONCURRENCY);
+  const readText = (commit: string, path: string) =>
+    limitRead(() => source.readText(commit, path));
 
   return {
     async getSnapshot(): Promise<KnowledgeSnapshot> {
@@ -153,7 +190,7 @@ export function createKnowledgeSnapshotStore(source: KnowledgeSource): Knowledge
         if (lastSuccessfulSnapshot) return lastSuccessfulSnapshot;
       } else {
         buildRecord = {
-          promise: buildSnapshot(source, commit),
+          promise: buildSnapshot(source, commit, readText),
           acceptedGeneration: requestGeneration,
         };
         inFlightBuilds.set(commit, buildRecord);
