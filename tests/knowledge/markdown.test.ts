@@ -124,3 +124,101 @@ const value = 1;
   assert.match(html, /<pre><code class="language-ts/);
   assert.doesNotMatch(html, /复制|button/);
 });
+
+test("分析目录与渲染标题共享 GitHub slugger 规则", () => {
+  const markdown = `## API 接口：安全？
+## API 接口：安全？
+
+[[#API 接口：安全？|本页章节]] [[target-note#API 接口：安全？|跨页章节]]`;
+  const result = analyzeMarkdown(markdown);
+  const html = renderMarkdown(note("source-note", markdown), [note("target-note", "## API 接口：安全？")]);
+
+  assert.deepEqual(result.outline, [
+    { id: "api-接口安全", text: "API 接口：安全？", depth: 2 },
+    { id: "api-接口安全-1", text: "API 接口：安全？", depth: 2 },
+  ]);
+  assert.match(html, /<h2 id="api-接口安全">/);
+  assert.match(html, /<h2 id="api-接口安全-1">/);
+  assert.match(html, /href="#api-%E6%8E%A5%E5%8F%A3%E5%AE%89%E5%85%A8"/);
+  assert.match(html, /href="\/knowledge\/target-note#api-%E6%8E%A5%E5%8F%A3%E5%AE%89%E5%85%A8"/);
+  assert.doesNotMatch(html, /user-content-/);
+});
+
+test("将合法块锚点放到段落、列表与引用目标并移除可见标记", () => {
+  const markdown = `段落内容 ^paragraph-id
+
+- 列表内容 ^list-id
+
+> 引用内容 ^quote-id
+
+[[#^paragraph-id|段落]] [[target-note#^list-id|列表]]`;
+  const html = renderMarkdown(note("source-note", markdown), [note("target-note", "目标")]);
+
+  assert.match(html, /<p id="\^paragraph-id">段落内容<\/p>/);
+  assert.match(html, /<li id="\^list-id">列表内容<\/li>/);
+  assert.match(html, /<blockquote id="\^quote-id">/);
+  assert.match(html, /href="#%5Eparagraph-id"/);
+  assert.match(html, /href="\/knowledge\/target-note#%5Elist-id"/);
+  assert.doesNotMatch(html, /内容 \^paragraph-id|内容 \^list-id|内容 \^quote-id/);
+});
+
+test("拒绝残余编码、双重编码和危险附件路径", () => {
+  const markdown = `
+![[safe/photo.png]]
+![[%252e%252e/secret.png]]
+![[%2e%2e/secret.png]]
+![[folder%252fsecret.png]]
+![[folder%255csecret.png]]
+![[https%253a%252f%252fevil.test/x.png]]
+![[nul%2500.png]]
+`;
+  const result = analyzeMarkdown(markdown);
+  const html = renderMarkdown(note("source-note", markdown));
+
+  assert.deepEqual(result.assets, ["safe/photo.png"]);
+  assert.match(html, /\/knowledge-assets\/source-note\/safe\/photo.png/);
+  assert.doesNotMatch(html, /secret\.png|evil\.test|nul/);
+});
+
+test("别名纯文本只保留别名，无别名时才使用目标", () => {
+  const result = analyzeMarkdown("## [[target-note|显示名称]]\n\n[[target-note|别名]] [[plain-target]]");
+
+  assert.equal(result.outline[0].text, "显示名称");
+  assert.equal(result.plainText, "显示名称 别名 plain-target");
+});
+
+test("使用同一 Markdown AST 识别引用式链接、图片和 Setext 标题并跳过代码与 HTML", () => {
+  const result = analyzeMarkdown(`Setext 标题
+---
+
+[引用笔记][note-ref] ![引用图片][image-ref]
+
+    [[indented-code]]
+
+<span>[[html-link]]</span>
+
+\`多行
+[[code-span]]\`
+
+[note-ref]: target-note.md#章节
+[image-ref]: ../attachments/reference.png
+`);
+
+  assert.deepEqual(result.outline, [{ id: "setext-标题", text: "Setext 标题", depth: 2 }]);
+  assert.deepEqual(result.links, [{ target: "target-note", label: "引用笔记" }]);
+  assert.deepEqual(result.assets, ["reference.png"]);
+  assert.doesNotMatch(result.plainText, /indented-code|html-link|code-span|note-ref|image-ref/);
+});
+
+test("Callout 自定义标题保留在可搜索纯文本中", () => {
+  const result = analyzeMarkdown("> [!WARNING] 权限提醒\n> 注意权限。");
+
+  assert.equal(result.plainText, "权限提醒 注意权限。");
+});
+
+test("游客看到失效链接文字但不会看到管理提示", () => {
+  const html = renderMarkdown(note("source-note", "[[missing-note|失效链接]]"));
+
+  assert.match(html, />失效链接<\/span>/);
+  assert.doesNotMatch(html, /链接不存在/);
+});

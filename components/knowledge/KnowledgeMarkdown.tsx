@@ -2,7 +2,6 @@ import Link from "next/link";
 import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import {
   normalizeKnowledgeAssetReference,
@@ -20,6 +19,8 @@ type Props = {
 
 const sanitizeSchema = {
   ...defaultSchema,
+  // 标题和块 ID 均由受控 remark 插件生成，避免 sanitize 改写为 user-content-*。
+  clobberPrefix: "",
   attributes: {
     ...defaultSchema.attributes,
     blockquote: [
@@ -116,18 +117,18 @@ export function KnowledgeMarkdown({
       // eslint-disable-next-line @next/next/no-img-element
       return <img src={assetUrl} alt={alt ?? ""} loading="lazy" />;
     },
-    blockquote({ children, node }) {
+    blockquote({ children, node, ...props }) {
       const callout = node?.properties?.dataCallout;
       const title = node?.properties?.dataCalloutTitle;
       if (typeof callout === "string") {
         return (
-          <aside data-callout={callout}>
+          <aside data-callout={callout} {...props}>
             {typeof title === "string" ? <strong>{title}</strong> : null}
             {children}
           </aside>
         );
       }
-      return <blockquote>{children}</blockquote>;
+      return <blockquote {...props}>{children}</blockquote>;
     },
   };
 
@@ -135,7 +136,7 @@ export function KnowledgeMarkdown({
     <div className="knowledge-markdown">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkObsidian]}
-        rehypePlugins={[rehypeSlug, rehypeHighlight, [rehypeSanitize, sanitizeSchema]]}
+        rehypePlugins={[rehypeHighlight, [rehypeSanitize, sanitizeSchema]]}
         components={components}
         skipHtml
         urlTransform={defaultUrlTransform}

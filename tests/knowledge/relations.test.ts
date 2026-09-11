@@ -45,3 +45,22 @@ test("代码与附件嵌入不会污染关系图", () => {
   assert.deepEqual(relations.brokenBySlug.get("source"), []);
 });
 
+test("引用式链接进入关系图，代码、原始 HTML 和引用式图片不会污染关系图", () => {
+  const relations = buildKnowledgeRelations([
+    note(
+      "source",
+      `[目标][target-ref] ![图片][image-ref]
+
+    [[indented-code]]
+
+<i>[[html-link]]</i>
+
+[target-ref]: target.md
+[image-ref]: ../attachments/reference.png`,
+    ),
+    note("target", "目标"),
+  ]);
+
+  assert.deepEqual(relations.outgoingBySlug.get("source"), ["target"]);
+  assert.deepEqual(relations.brokenBySlug.get("source"), []);
+});
