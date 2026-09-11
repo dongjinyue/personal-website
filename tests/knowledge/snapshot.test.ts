@@ -25,6 +25,8 @@ class MemorySource implements KnowledgeSource {
   failReads = false;
   listCalls = 0;
   readGates = new Map<string, Promise<void>>();
+  activeReads = 0;
+  maxActiveReads = 0;
 
   async getHead(): Promise<string> {
     if (this.failHead) throw new Error("仓库位于 C:\\绝对\\秘密路径");
@@ -37,11 +39,17 @@ class MemorySource implements KnowledgeSource {
   }
 
   async readText(commit: string, filePath: string): Promise<string> {
-    await this.readGates.get(commit);
-    if (this.failReads) throw new Error("包含 C:\\绝对\\秘密路径");
-    const value = this.files.get(filePath);
-    if (!value) throw new Error("文件不存在");
-    return value.toString("utf8");
+    this.activeReads += 1;
+    this.maxActiveReads = Math.max(this.maxActiveReads, this.activeReads);
+    try {
+      await this.readGates.get(commit);
+      if (this.failReads) throw new Error("包含 C:\\绝对\\秘密路径");
+      const value = this.files.get(filePath);
+      if (!value) throw new Error("文件不存在");
+      return value.toString("utf8");
+    } finally {
+      this.activeReads -= 1;
+    }
   }
 
   async readBinary(_commit: string, filePath: string): Promise<Buffer> {
@@ -153,4 +161,79 @@ test("较慢的旧提交构建不会覆盖已经完成的新提交快照", async
 
   assert.strictEqual(await store.getSnapshot(), newSnapshot);
   assert.equal(source.listCalls, 2);
+});
+
+test("已有旧快照时，后续请求不等待正在构建的新提交", async () => {
+  const source = new MemorySource();
+  source.files.set("notes/a.md", Buffer.from(validNote("stable")));
+  const store = createKnowledgeSnapshotStore(source);
+  const stable = await store.getSnapshot();
+
+  source.head = "e".repeat(40);
+  let releaseNew!: () => void;
+  source.readGates.set(
+    source.head,
+    new Promise<void>((resolve) => {
+      releaseNew = resolve;
+    }),
+  );
+  const firstRefresh = store.getSnapshot();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const result = await Promise.race([
+    store.getSnapshot(),
+    new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 200)),
+  ]);
+  assert.strictEqual(result, stable);
+
+  releaseNew();
+  assert.equal((await firstRefresh).version, source.head);
+});
+
+test("HEAD 失败发生后，先前构建完成不能清除最新源错误", async () => {
+  const source = new MemorySource();
+  source.files.set("notes/a.md", Buffer.from(validNote("pending")));
+  let releaseBuild!: () => void;
+  source.readGates.set(
+    source.head,
+    new Promise<void>((resolve) => {
+      releaseBuild = resolve;
+    }),
+  );
+  const store = createKnowledgeSnapshotStore(source);
+  const pendingBuild = store.getSnapshot();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  source.failHead = true;
+  await assert.rejects(() => store.getSnapshot(), /知识库快照构建失败/);
+  releaseBuild();
+  await pendingBuild;
+
+  assert.equal(store.getSourceError()?.code, "source-error");
+});
+
+test("批量构建快照时限制同时进行的 Git 文件读取数", async () => {
+  const source = new MemorySource();
+  for (let index = 0; index < 12; index += 1) {
+    source.files.set(
+      `notes/group/note-${index}.md`,
+      Buffer.from(validNote(`note-${index}`)),
+    );
+  }
+  let releaseReads!: () => void;
+  source.readGates.set(
+    source.head,
+    new Promise<void>((resolve) => {
+      releaseReads = resolve;
+    }),
+  );
+
+  const pending = createKnowledgeSnapshotStore(source).getSnapshot();
+  await new Promise((resolve) => setImmediate(resolve));
+  const observedMaximum = source.maxActiveReads;
+  releaseReads();
+  await pending;
+
+  assert.ok(observedMaximum > 0);
+  assert.ok(observedMaximum <= 4, `同时读取了 ${observedMaximum} 个文件`);
 });
