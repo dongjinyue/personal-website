@@ -1,38 +1,26 @@
 import "server-only";
 
 import { getCurrentUser, isAdmin, requireAdmin } from "@/lib/auth/admin";
-import { canReadKnowledgeNote, filterVisibleNotes, type KnowledgeViewer } from "./access";
+import { filterVisibleNotes, getDetailForViewer, type KnowledgeDetail, type KnowledgeViewer } from "./access";
 import {
   parseKnowledgeQuery,
   queryKnowledge,
   type KnowledgeQuery,
   type KnowledgeQueryInput,
 } from "./query";
-import { buildKnowledgeRelations } from "./relations";
 import {
   getKnowledgeSnapshot,
   getKnowledgeSourceError,
   type KnowledgeSnapshot,
 } from "./snapshot";
-import type { KnowledgeDiagnostic, KnowledgeNoteSource } from "./types";
+import type { KnowledgeDiagnostic } from "./types";
 
 export type KnowledgeListResult = ReturnType<typeof queryKnowledge> & {
   canonicalQuery: KnowledgeQuery;
   isAdmin: boolean;
 };
 
-export type KnowledgeRelationItem = Pick<
-  KnowledgeNoteSource,
-  "slug" | "title" | "category" | "tags" | "createdAt" | "updatedAt" | "description" | "visibility" | "status"
->;
-
-export type KnowledgeDetail = KnowledgeNoteSource & {
-  outgoing: KnowledgeRelationItem[];
-  backlinks: KnowledgeRelationItem[];
-  broken: Array<{ slug: string }>;
-  previous: KnowledgeRelationItem | null;
-  next: KnowledgeRelationItem | null;
-};
+export type { KnowledgeDetail, KnowledgeRelationItem } from "./access";
 
 export type KnowledgeAdminStatus = {
   version: string;
@@ -43,24 +31,6 @@ export type KnowledgeAdminStatus = {
   draftCount: number;
   diagnostics: readonly KnowledgeDiagnostic[];
 };
-
-function toRelationItem(note: KnowledgeNoteSource): KnowledgeRelationItem {
-  return {
-    slug: note.slug,
-    title: note.title,
-    category: note.category,
-    tags: [...note.tags],
-    createdAt: note.createdAt,
-    updatedAt: note.updatedAt,
-    description: note.description,
-    visibility: note.visibility,
-    status: note.status,
-  };
-}
-
-function byCreatedAt(left: KnowledgeNoteSource, right: KnowledgeNoteSource): number {
-  return left.createdAt.localeCompare(right.createdAt) || left.slug.localeCompare(right.slug);
-}
 
 /**
  * 私密读取只信任 Auth 服务的 getUser 结果。登录服务暂时不可用时，
@@ -74,41 +44,6 @@ export async function getKnowledgeViewerForCurrentUser(): Promise<KnowledgeViewe
   } catch {
     return { role: "guest" };
   }
-}
-
-/**
- * 基于全量关系图再做可见性裁剪：不可读目标不是“失效链接”，
- * 因此不会把私密或草稿 slug 泄漏给游客。
- */
-export function getDetailForViewer(
-  slug: string,
-  viewer: KnowledgeViewer,
-  notes: readonly KnowledgeNoteSource[],
-): KnowledgeDetail | null {
-  const note = notes.find((candidate) => candidate.slug === slug);
-  if (!note || !canReadKnowledgeNote(note, viewer)) return null;
-
-  const visibleNotes = filterVisibleNotes(notes, viewer);
-  const visibleBySlug = new Map(visibleNotes.map((candidate) => [candidate.slug, candidate]));
-  const allRelations = buildKnowledgeRelations(notes);
-  const relationItems = (slugs: readonly string[]) =>
-    slugs
-      .map((relatedSlug) => visibleBySlug.get(relatedSlug))
-      .filter((candidate): candidate is KnowledgeNoteSource => Boolean(candidate))
-      .map(toRelationItem);
-  const ordered = [...visibleNotes].sort(byCreatedAt);
-  const index = ordered.findIndex((candidate) => candidate.slug === note.slug);
-
-  return {
-    ...note,
-    tags: [...note.tags],
-    outgoing: relationItems(allRelations.outgoingBySlug.get(note.slug) ?? []),
-    backlinks: relationItems(allRelations.backlinksBySlug.get(note.slug) ?? []),
-    // 这里的 broken 只来自全量索引真正不存在的目标，而非不可见笔记。
-    broken: (allRelations.brokenBySlug.get(note.slug) ?? []).map((relatedSlug) => ({ slug: relatedSlug })),
-    previous: index > 0 ? toRelationItem(ordered[index - 1]) : null,
-    next: index >= 0 && index < ordered.length - 1 ? toRelationItem(ordered[index + 1]) : null,
-  };
 }
 
 /** 列表读取先确定真实服务端身份，再以同一可见集合产生所有派生数据。 */

@@ -21,7 +21,7 @@ export type KnowledgeListItem = Pick<
   "slug" | "title" | "category" | "tags" | "createdAt" | "updatedAt" | "description" | "visibility" | "status"
 > & {
   excerpt: string;
-  highlights: string[];
+  highlights: Array<{ text: string; matched: boolean }>;
 };
 
 export type KnowledgeQueryResult = {
@@ -98,11 +98,40 @@ function compareNotes(left: KnowledgeNoteSource, right: KnowledgeNoteSource, sor
   return right.updatedAt.localeCompare(left.updatedAt) || left.slug.localeCompare(right.slug);
 }
 
-function findHighlights(note: KnowledgeNoteSource, query: string): string[] {
+function fragmentMatch(value: string, query: string): Array<{ text: string; matched: boolean }> {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return [];
+  let normalized = "";
+  const ranges: Array<{ start: number; end: number; normalizedStart: number; normalizedEnd: number }> = [];
+  let offset = 0;
+  for (const character of value) {
+    const normalizedCharacter = character.normalize("NFKC").toLocaleLowerCase();
+    ranges.push({ start: offset, end: offset + character.length, normalizedStart: normalized.length, normalizedEnd: normalized.length + normalizedCharacter.length });
+    normalized += normalizedCharacter;
+    offset += character.length;
+  }
+  const matchStart = normalized.indexOf(normalizedQuery);
+  if (matchStart < 0) return [];
+  const matchEnd = matchStart + normalizedQuery.length;
+  const first = ranges.find((range) => range.normalizedEnd > matchStart);
+  const last = [...ranges].reverse().find((range) => range.normalizedStart < matchEnd);
+  if (!first || !last) return [];
+  return [
+    ...(first.start ? [{ text: value.slice(0, first.start), matched: false }] : []),
+    { text: value.slice(first.start, last.end), matched: true },
+    ...(last.end < value.length ? [{ text: value.slice(last.end), matched: false }] : []),
+  ];
+}
+
+function findHighlights(note: KnowledgeNoteSource, query: string): Array<{ text: string; matched: boolean }> {
   const normalized = normalizeSearchText(query);
   if (!normalized) return [];
-  const values = [note.title, note.description ?? "", ...note.tags, analyzeMarkdown(note.markdown).plainText];
-  return values.filter((value) => normalizeSearchText(value).includes(normalized));
+  const values = [note.title, note.description ?? "", ...note.tags, analyzeMarkdown(note.markdown).plainText.slice(0, 160)];
+  for (const value of values) {
+    const fragments = fragmentMatch(value, query);
+    if (fragments.length) return fragments;
+  }
+  return [];
 }
 
 /**

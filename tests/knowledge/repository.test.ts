@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { filterVisibleNotes, type KnowledgeViewer } from "../../lib/knowledge/access";
+import { filterVisibleNotes, getDetailForViewer, type KnowledgeViewer } from "../../lib/knowledge/access";
 import { parseKnowledgeQuery, queryKnowledge } from "../../lib/knowledge/query";
-import { getDetailForViewer } from "../../lib/knowledge/repository";
 import type { KnowledgeNoteSource } from "../../lib/knowledge/types";
 
 const guest: KnowledgeViewer = { role: "guest" };
@@ -52,6 +51,10 @@ test("按权限过滤后搜索、筛选、排序并生成摘要和高亮", () =>
   assert.equal(result.total, 1);
   assert.match(result.items[0].excerpt, /服务端组件/);
   assert.ok(result.items[0].highlights.length > 0);
+  assert.deepEqual(result.items[0].highlights, [
+    { text: "React ", matched: false },
+    { text: "服务端组件", matched: true },
+  ]);
   assert.deepEqual(result.categories, [{ name: "programming", count: 1 }]);
   assert.deepEqual(result.tags, [{ name: "React", count: 1 }]);
 });

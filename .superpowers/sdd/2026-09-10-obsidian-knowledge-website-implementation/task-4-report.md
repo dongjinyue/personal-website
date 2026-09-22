@@ -79,3 +79,25 @@ DONE_WITH_CONCERNS
 
 1. 必须在恢复该工作树依赖（至少 `tsx`、`typescript`、`eslint` 与 `server-only`）后重新执行完整测试、类型检查和 ESLint；目前不能声称最终验证通过。
 2. 附件路径的异步契约已改为匹配实施简报中的 `assert.rejects` 用法，但这一次修改后无法在损坏的依赖环境中重新观察 GREEN。
+
+## 修复轮次 1（FIX_BASE: `8b1ad511`）
+
+### RED / GREEN
+
+- 先补充纯策略测试：公开笔记请求仅私密笔记引用的 `secret.png` 时 `readBinary` 调用次数必须为 0；残余 `%xx`、双重编码、编码分隔符、非法 `%`、控制字符与协议段必须拒绝；缺失 Git blob 返回 `null`，其他来源错误继续抛出；高亮返回普通文本片段。
+- 使用 pnpm 直接 tsx loader 运行三组纯策略测试，GREEN：9 passed，0 failed。
+- 使用同一 loader 运行完整 `tests/knowledge/*.test.ts`，通过输出包含新增安全用例及全部既有前置用例，进程退出码为 0。
+
+### 修复内容
+
+- 新增 `lib/knowledge/asset-policy.ts`：无 `server-only`、无 Next/Auth 依赖的路径校验、附件引用授权与二进制读取策略。
+- `getAssetForViewer` 只在笔记通过权限且 `analyzeMarkdown(note.markdown).assets` 确认引用目标附件后调用 `readBinary`。
+- RouteContext 已解码时拒绝所有残余百分号、路径分隔符、控制字符、协议段及穿越段；不会二次解码。
+- 仅缺失 Git blob（`知识库 Git 读取文件失败`）映射为 `null`；其他来源错误保留给上层处理。
+- `getDetailForViewer` 已移入无服务端导入的 `access.ts`；`repository.ts` 仅负责 Auth 和快照适配。
+- 搜索高亮改为 `{ text, matched }` 原文片段；按 NFKC（兼容形式）和大小写归一化确定原始文本范围，不再返回整篇正文。
+
+### 最终检查
+
+- `git diff --check`：通过。
+- `tsc --noEmit`：本次修复后的唯一剩余报错为全局 `RouteContext` 不存在；该类型由 Next.js 的 `next dev`、`next build` 或 `next typegen` 自动生成，非本次策略代码错误。

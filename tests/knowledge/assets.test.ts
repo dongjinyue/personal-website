@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getAssetForViewer, normalizeAttachmentPath } from "../../lib/knowledge/assets";
+import { getAssetForViewer, normalizeAttachmentPath } from "../../lib/knowledge/asset-policy";
 import type { KnowledgeViewer } from "../../lib/knowledge/access";
 import type { KnowledgeSnapshot, KnowledgeSource } from "../../lib/knowledge/snapshot";
 
@@ -26,10 +26,22 @@ const source: KnowledgeSource = {
   },
 };
 
+let readCount = 0;
+const countingSource: KnowledgeSource = {
+  ...source,
+  async readBinary() {
+    readCount += 1;
+    return Buffer.from("asset");
+  },
+};
+
 test("拒绝目录穿越和非图片附件路径", async () => {
   await assert.rejects(() => normalizeAttachmentPath("../secret.png"), /不安全/);
   await assert.rejects(() => normalizeAttachmentPath("icon.svg"), /不支持/);
   assert.equal(await normalizeAttachmentPath(["nested", "photo.webp"]), "nested/photo.webp");
+  for (const segment of ["%2e%2e.png", "%252e%252e.png", "bad%2Fname.png", "bad%5Cname.png", "bad%name.png", "a\u0000.png", "https:evil.png"]) {
+    await assert.rejects(() => normalizeAttachmentPath([segment]), /不安全/);
+  }
 });
 
 test("必须先通过笔记权限检查才能读取附件", async () => {
@@ -38,4 +50,24 @@ test("必须先通过笔记权限检查才能读取附件", async () => {
   assert.ok(asset);
   assert.equal(asset.contentType, "image/png");
   assert.deepEqual(asset.body, Buffer.from("asset"));
+});
+
+test("公开笔记不能借附件路由读取只由私密笔记引用的图片", async () => {
+  const mixedSnapshot: KnowledgeSnapshot = {
+    ...snapshot,
+    notes: [
+      { ...snapshot.notes[0], markdown: "![[secret.png]]" },
+      { ...snapshot.notes[0], slug: "public-note", visibility: "public", path: "notes/ai/public-note.md", markdown: "![[public.png]]" },
+    ],
+  };
+  readCount = 0;
+  assert.equal(await getAssetForViewer("public-note", ["secret.png"], guest, mixedSnapshot, countingSource), null);
+  assert.equal(readCount, 0);
+});
+
+test("已引用附件的 Git blob 缺失时返回空，不吞没其他来源错误", async () => {
+  const missingBlob: KnowledgeSource = { ...source, async readBinary() { throw new Error("知识库 Git 读取文件失败"); } };
+  assert.equal(await getAssetForViewer("private-note", ["secret.png"], admin, snapshot, missingBlob), null);
+  const unavailableSource: KnowledgeSource = { ...source, async readBinary() { throw new Error("连接知识库服务失败"); } };
+  await assert.rejects(() => getAssetForViewer("private-note", ["secret.png"], admin, snapshot, unavailableSource), /连接知识库服务失败/);
 });
