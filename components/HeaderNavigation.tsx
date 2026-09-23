@@ -84,6 +84,10 @@ export default function HeaderNavigation({ showAdmin, projects, tools, categorie
               onNavigate={() => setOpen(false)}>查看全部工具 →</GuardedLink>
           </div>
         </div>
+        <GuardedLink href="/knowledge" onNavigate={() => setOpen(false)}
+          aria-current={pathname === "/knowledge" || pathname.startsWith("/knowledge/") ? "page" : undefined}>
+          知识库
+        </GuardedLink>
         {showAdmin ? (
           <GuardedLink href="/admin/tools" onNavigate={() => setOpen(false)}
             aria-current={pathname === "/admin" || pathname.startsWith("/admin/") ? "page" : undefined}>

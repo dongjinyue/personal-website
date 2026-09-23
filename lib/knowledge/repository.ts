@@ -18,6 +18,7 @@ import type { KnowledgeDiagnostic } from "./types";
 export type KnowledgeListResult = ReturnType<typeof queryKnowledge> & {
   canonicalQuery: KnowledgeQuery;
   isAdmin: boolean;
+  visibleTotal: number;
 };
 
 export type { KnowledgeDetail, KnowledgeRelationItem } from "./access";
@@ -62,7 +63,12 @@ export async function getKnowledgeListForCurrentUser(
     page: result.page,
   };
 
-  return { ...result, canonicalQuery, isAdmin: viewer.role === "admin" };
+  return {
+    ...result,
+    canonicalQuery,
+    isAdmin: viewer.role === "admin",
+    visibleTotal: visibleNotes.length,
+  };
 }
 
 /** 详情在返回 Markdown 和关系数据之前同样执行唯一的服务端权限判断。 */

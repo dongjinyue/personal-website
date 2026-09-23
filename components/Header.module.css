@@ -188,6 +188,12 @@
 
 .menuButton { display: none; }
 
+@media (max-width: 760px) and (min-width: 601px) {
+  .navigation { gap: 14px; }
+  .links { gap: 12px; }
+  .links a { font-size: 0.84rem; }
+}
+
 .brand:focus-visible,
 .links a:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
