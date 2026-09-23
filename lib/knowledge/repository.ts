@@ -12,7 +12,7 @@ import {
   getKnowledgeSnapshot,
   getKnowledgeSourceError,
 } from "./snapshot";
-import { summarizeKnowledgeStatus, type KnowledgeAdminStatus } from "./status";
+import { readKnowledgeAdminStatus, type KnowledgeAdminStatus } from "./status";
 
 export type KnowledgeListResult = ReturnType<typeof queryKnowledge> & {
   canonicalQuery: KnowledgeQuery;
@@ -73,7 +73,5 @@ export async function getKnowledgeNoteForCurrentUser(slug: string): Promise<Know
 /** 管理状态是敏感读取；即使页面布局已经验证过，也在 Repository 再次鉴权。 */
 export async function getKnowledgeStatusForAdmin(): Promise<KnowledgeAdminStatus> {
   await requireAdmin();
-  const snapshot = await getKnowledgeSnapshot();
-  const sourceError = getKnowledgeSourceError();
-  return summarizeKnowledgeStatus(snapshot, sourceError);
+  return readKnowledgeAdminStatus(getKnowledgeSnapshot, getKnowledgeSourceError);
 }

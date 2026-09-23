@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { summarizeKnowledgeStatus } from "../../lib/knowledge/status";
-import type { KnowledgeSnapshot } from "../../lib/knowledge/snapshot";
+import { readKnowledgeAdminStatus } from "../../lib/knowledge/status";
+import { createKnowledgeSnapshotStore, type KnowledgeSnapshot, type KnowledgeSource } from "../../lib/knowledge/snapshot";
 import type { KnowledgeNoteSource } from "../../lib/knowledge/types";
 
 function note(slug: string, visibility: "public" | "private", status: "published" | "draft"): KnowledgeNoteSource {
@@ -74,3 +75,38 @@ test("管理员诊断只保留相对路径与固定错误说明", () => {
   ]);
   assert.doesNotMatch(JSON.stringify(status), /C:\\\\private|secret-token|home\/ubuntu|key\.pem/);
 });
+
+for (const failure of ["head", "build"] as const) {
+  test(`知识库首次 ${failure === "head" ? "HEAD" : "快照构建"} 失败仍返回安全管理员诊断`, async () => {
+    const source: KnowledgeSource = {
+      async getHead() {
+        if (failure === "head") throw new Error("C:\\private\\vault secret-token");
+        return "a".repeat(40);
+      },
+      async listFiles() {
+        return ["notes/secret.md"];
+      },
+      async readText() {
+        throw new Error("/home/ubuntu/private-vault private note body");
+      },
+      async readBinary() {
+        throw new Error("not used");
+      },
+    };
+    const store = createKnowledgeSnapshotStore(source);
+    const status = await readKnowledgeAdminStatus(
+      () => store.getSnapshot(),
+      () => store.getSourceError(),
+    );
+
+    assert.equal(status.version, "未知");
+    assert.equal(status.total, 0);
+    assert.equal(status.diagnostics.length, 1);
+    assert.deepEqual(status.diagnostics[0], {
+      path: "knowledge-source",
+      code: "source-error",
+      message: "知识库读取失败，请检查同步状态。",
+    });
+    assert.doesNotMatch(JSON.stringify(status), /secret-token|ubuntu|private-vault|note body/);
+  });
+}

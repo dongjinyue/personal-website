@@ -58,3 +58,34 @@ export function summarizeKnowledgeStatus(
     })),
   };
 }
+
+/**
+ * 管理员状态读取包装器：首次读取失败时快照不存在，但来源存储会保留安全诊断。
+ * 该入口也保留旧快照成功返回后的诊断，因此冷启动失败与刷新失败共用同一安全汇总。
+ */
+export async function readKnowledgeAdminStatus(
+  readSnapshot: () => Promise<KnowledgeSnapshot>,
+  readSourceError: () => KnowledgeDiagnostic | null,
+): Promise<KnowledgeAdminStatus> {
+  let snapshot: KnowledgeSnapshot | null = null;
+  try {
+    snapshot = await readSnapshot();
+  } catch {
+    // 原始异常可能含绝对路径、Git 输出或内容片段，只使用存储层的固定诊断。
+  }
+
+  const sourceError = readSourceError();
+  if (!snapshot && !sourceError) {
+    throw new Error("知识库状态暂时无法读取。");
+  }
+
+  return summarizeKnowledgeStatus(
+    snapshot ?? {
+      version: "",
+      generatedAt: new Date().toISOString(),
+      notes: [],
+      diagnostics: [],
+    },
+    sourceError,
+  );
+}
