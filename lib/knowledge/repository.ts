@@ -11,9 +11,8 @@ import {
 import {
   getKnowledgeSnapshot,
   getKnowledgeSourceError,
-  type KnowledgeSnapshot,
 } from "./snapshot";
-import type { KnowledgeDiagnostic } from "./types";
+import { summarizeKnowledgeStatus, type KnowledgeAdminStatus } from "./status";
 
 export type KnowledgeListResult = ReturnType<typeof queryKnowledge> & {
   canonicalQuery: KnowledgeQuery;
@@ -23,15 +22,8 @@ export type KnowledgeListResult = ReturnType<typeof queryKnowledge> & {
 
 export type { KnowledgeDetail, KnowledgeRelationItem } from "./access";
 
-export type KnowledgeAdminStatus = {
-  version: string;
-  generatedAt: string;
-  total: number;
-  publicPublished: number;
-  privateCount: number;
-  draftCount: number;
-  diagnostics: readonly KnowledgeDiagnostic[];
-};
+export type { KnowledgeAdminStatus } from "./status";
+export { summarizeKnowledgeStatus } from "./status";
 
 /**
  * 私密读取只信任 Auth 服务的 getUser 结果。登录服务暂时不可用时，
@@ -84,25 +76,4 @@ export async function getKnowledgeStatusForAdmin(): Promise<KnowledgeAdminStatus
   const snapshot = await getKnowledgeSnapshot();
   const sourceError = getKnowledgeSourceError();
   return summarizeKnowledgeStatus(snapshot, sourceError);
-}
-
-/** 纯汇总函数让管理员状态页的计数规则可独立验证。 */
-export function summarizeKnowledgeStatus(
-  snapshot: KnowledgeSnapshot,
-  sourceError: KnowledgeDiagnostic | null = null,
-): KnowledgeAdminStatus {
-  const diagnostics = sourceError
-    ? [...snapshot.diagnostics, sourceError]
-    : [...snapshot.diagnostics];
-  return {
-    version: snapshot.version,
-    generatedAt: snapshot.generatedAt,
-    total: snapshot.notes.length,
-    publicPublished: snapshot.notes.filter(
-      (note) => note.visibility === "public" && note.status === "published",
-    ).length,
-    privateCount: snapshot.notes.filter((note) => note.visibility === "private").length,
-    draftCount: snapshot.notes.filter((note) => note.status === "draft").length,
-    diagnostics,
-  };
 }
