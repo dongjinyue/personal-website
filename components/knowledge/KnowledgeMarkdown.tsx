@@ -79,20 +79,26 @@ function nodeText(value: ReactNode): string {
   return "";
 }
 
+/** 检查完整 HTML 树，图片可能嵌在链接、强调或删除线内。 */
+function containsImage(node: unknown): boolean {
+  if (!node || typeof node !== "object") return false;
+  const element = node as { type?: unknown; tagName?: unknown; children?: unknown };
+  if (element.type === "element" && element.tagName === "img") return true;
+  return Array.isArray(element.children) && element.children.some(containsImage);
+}
+
 export function KnowledgeMarkdown({
   note,
   relations,
   showBrokenLinkWarnings = false,
 }: Props) {
   const brokenTargets = new Set(relations.brokenBySlug.get(note.slug) ?? []);
+  const visibleTargets = new Set([note.slug, ...(relations.outgoingBySlug.get(note.slug) ?? [])]);
 
   const components: Components = {
     p({ children, node, ...props }) {
       // 图片查看器包含原生 dialog，图片段落改用 flow 容器避免生成无效的 p > figure 结构。
-      const containsImage = node?.children.some(
-        (child) => child.type === "element" && child.tagName === "img",
-      );
-      return containsImage
+      return containsImage(node)
         ? <div className="knowledge-image-row" {...props}>{children}</div>
         : <p {...props}>{children}</p>;
     },
@@ -102,20 +108,42 @@ export function KnowledgeMarkdown({
         : null;
       const className = codeElement?.props.className ?? "";
       const language = className.match(/(?:^|\s)language-([\w-]+)/)?.[1] ?? "text";
-      const code = nodeText(codeElement?.props.children ?? children).replace(/\n$/, "");
-      return <CodeBlock code={code} language={language} />;
+      const highlighted = codeElement?.props.children ?? children;
+      // 复制使用同一节点的纯文本，显示保留 rehype-highlight 清洗后的 token 标记。
+      const code = nodeText(highlighted);
+      return <CodeBlock code={code} language={language}>{highlighted}</CodeBlock>;
     },
     a({ href, children, node, ...props }) {
       // react-markdown 的 AST 节点不能透传为 DOM 属性。
-      void node;
       const target = getKnowledgeLinkTarget(href);
-      if (target && brokenTargets.has(target)) {
-        return showBrokenLinkWarnings ? (
+      // 游客只根据可见出链生成可点击链接；不可见和不存在目标形态完全相同。
+      if (target && !visibleTargets.has(target)) {
+        const trulyBroken = brokenTargets.has(target);
+        if (containsImage(node)) {
+          return (
+            <div className="knowledge-image-row knowledge-broken-link">
+              {children}
+              {showBrokenLinkWarnings && trulyBroken ? <small>（链接不存在）</small> : null}
+            </div>
+          );
+        }
+        return showBrokenLinkWarnings && trulyBroken ? (
           <span className="knowledge-broken-link" title="链接不存在">
             {children} <small>（链接不存在）</small>
           </span>
         ) : (
           <span>{children}</span>
+        );
+      }
+      if (containsImage(node)) {
+        // 图片查看按钮不能嵌套在链接内；保留一个紧邻图片的独立原链接。
+        return (
+          <div className="knowledge-image-row">
+            {children}
+            {href?.startsWith("/knowledge/") || href?.startsWith("#")
+              ? <Link href={href}>打开原链接</Link>
+              : href ? <a href={href}>打开原链接</a> : null}
+          </div>
         );
       }
       if (href?.startsWith("/knowledge/") || href?.startsWith("#")) {
@@ -132,6 +160,21 @@ export function KnowledgeMarkdown({
       ) : (
         <span>{children}</span>
       );
+    },
+    em({ children, node, ...props }) {
+      return containsImage(node)
+        ? <div className="knowledge-image-row">{children}</div>
+        : <em {...props}>{children}</em>;
+    },
+    strong({ children, node, ...props }) {
+      return containsImage(node)
+        ? <div className="knowledge-image-row">{children}</div>
+        : <strong {...props}>{children}</strong>;
+    },
+    del({ children, node, ...props }) {
+      return containsImage(node)
+        ? <div className="knowledge-image-row">{children}</div>
+        : <del {...props}>{children}</del>;
     },
     img({ src, alt, node }) {
       const isKnowledgeAsset = node?.properties?.dataKnowledgeAsset === "true";

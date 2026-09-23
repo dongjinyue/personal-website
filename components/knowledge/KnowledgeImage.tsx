@@ -10,6 +10,7 @@ type Props = {
 /** 原生 dialog 承担模态语义；组件只补齐焦点放置、恢复和图片失败状态。 */
 export default function KnowledgeImage({ src, alt }: Props) {
   const [loadFailed, setLoadFailed] = useState(false);
+  const [largeLoadFailed, setLargeLoadFailed] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -65,8 +66,12 @@ export default function KnowledgeImage({ src, alt }: Props) {
           <button ref={closeRef} type="button" onClick={closeImage}>关闭大图</button>
         </div>
         <div className="knowledge-image-dialog-body">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} />
+          {largeLoadFailed ? (
+            <p className="knowledge-image-dialog-error" role="status">大图暂时无法显示</p>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={src} alt={alt} onError={() => setLargeLoadFailed(true)} />
+          )}
         </div>
       </dialog>
     </figure>

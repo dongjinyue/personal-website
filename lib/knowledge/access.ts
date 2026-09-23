@@ -9,6 +9,7 @@ export type KnowledgeDetail = KnowledgeNoteSource & {
   broken: Array<{ slug: string }>;
   previous: KnowledgeRelationItem | null;
   next: KnowledgeRelationItem | null;
+  showBrokenLinkWarnings: boolean;
 };
 
 /** 服务端权限层只区分公开游客与经 Auth 服务确认的管理员。 */
@@ -44,7 +45,7 @@ function toRelationItem(note: KnowledgeNoteSource): KnowledgeRelationItem {
   };
 }
 
-/** 详情关系先使用全量索引判定链接是否存在，再裁剪为当前查看者可见内容。 */
+/** 关系图由全量笔记判断真正失效目标，公开详情只返回可见关联项。 */
 export function getDetailForViewer(slug: string, viewer: KnowledgeViewer, notes: readonly KnowledgeNoteSource[]): KnowledgeDetail | null {
   const note = notes.find((candidate) => candidate.slug === slug);
   if (!note || !canReadKnowledgeNote(note, viewer)) return null;
@@ -62,5 +63,6 @@ export function getDetailForViewer(slug: string, viewer: KnowledgeViewer, notes:
     broken: (relations.brokenBySlug.get(slug) ?? []).map((related) => ({ slug: related })),
     previous: index > 0 ? toRelationItem(ordered[index - 1]) : null,
     next: index >= 0 && index < ordered.length - 1 ? toRelationItem(ordered[index + 1]) : null,
+    showBrokenLinkWarnings: viewer.role === "admin",
   };
 }

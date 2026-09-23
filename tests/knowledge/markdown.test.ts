@@ -223,3 +223,36 @@ test("游客看到失效链接文字但不会看到管理提示", () => {
   assert.match(html, />失效链接<\/span>/);
   assert.doesNotMatch(html, /链接不存在/);
 });
+
+test("游客无法从公开笔记的链接形态区分私密目标和不存在目标", () => {
+  const source = note("source-note", "[[private-secret|入口]] [[missing-note|入口]]");
+  const privateTarget = { ...note("private-secret", "私密内容"), visibility: "private" as const };
+  const html = renderMarkdown(source, [privateTarget]);
+
+  assert.doesNotMatch(html, /private-secret|missing-note|href="\/knowledge\//);
+  assert.match(html, /<span>入口<\/span> <span>入口<\/span>/);
+  const adminHtml = renderMarkdown(source, [privateTarget], true);
+  assert.match(adminHtml, /href="\/knowledge\/private-secret"/);
+  assert.match(adminHtml, /链接不存在/);
+});
+
+test("代码块保留语法高亮并复制包含原始结尾换行的文本", () => {
+  const html = renderMarkdown(note("code-note", "```js\nconst answer = 42;\n```"));
+
+  assert.match(html, /<span class="hljs-keyword">const<\/span>/);
+  assert.match(html, /<code[^>]*>.*answer = .*;\n<\/code>/s);
+});
+
+test("链接和强调中的图片保持合法结构，源链接单独可访问", () => {
+  const html = renderMarkdown(note(
+    "image-note",
+    "[![架构](../attachments/a.png)](https://example.com)\n\n*![强调图片](../attachments/b.png)*",
+  ));
+
+  assert.doesNotMatch(html, /<p[^>]*>(?:(?!<\/p>)[\s\S])*<figure/);
+  assert.doesNotMatch(html, /<a[^>]*>(?:(?!<\/a>)[\s\S])*<figure/);
+  assert.doesNotMatch(html, /<em[^>]*>(?:(?!<\/em>)[\s\S])*<figure/);
+  assert.match(html, /href="https:\/\/example\.com"/);
+  assert.match(html, /<a[^>]*href="https:\/\/example\.com"[^>]*>打开原链接<\/a>/);
+  assert.match(html, /aria-label="查看大图：强调图片"/);
+});

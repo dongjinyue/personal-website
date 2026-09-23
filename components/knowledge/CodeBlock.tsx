@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type CopyState = "idle" | "copied" | "failed";
 
 type Props = {
   code: string;
   language?: string;
+  children: ReactNode;
 };
 
 /**
  * 代码复制是详情页唯一需要浏览器剪贴板权限的区域。
  * 失败时选中完整代码，用户仍可使用系统快捷键手动复制。
  */
-export default function CodeBlock({ code, language = "text" }: Props) {
+export default function CodeBlock({ code, language = "text", children }: Props) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const codeRef = useRef<HTMLElement>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,7 +63,7 @@ export default function CodeBlock({ code, language = "text" }: Props) {
         <span>{language}</span>
         <button type="button" onClick={handleCopy}>{buttonLabel}</button>
       </figcaption>
-      <pre><code ref={codeRef} className={`language-${language}`}>{code}</code></pre>
+      <pre><code ref={codeRef} className={`language-${language}`}>{children}</code></pre>
       <span className="knowledge-code-status" role="status" aria-live="polite" aria-atomic="true">
         {statusMessage}
       </span>

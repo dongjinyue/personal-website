@@ -47,7 +47,7 @@ test("详情严格按查看者权限裁剪关系与前后文章", () => {
   const notes = [
     note("older-public", { createdAt: "2026-08-01" }),
     note("public-note", {
-      markdown: "[[public-linker]] [[private-note]]",
+      markdown: "[[public-linker]] [[private-note]] [[missing-note]]",
     }),
     note("public-linker", {
       createdAt: "2026-09-02",
@@ -67,6 +67,8 @@ test("详情严格按查看者权限裁剪关系与前后文章", () => {
   assert.ok(publicDetail);
   assert.deepEqual(publicDetail.backlinks.map((item) => item.slug), ["public-linker"]);
   assert.deepEqual(publicDetail.outgoing.map((item) => item.slug), ["public-linker"]);
+  assert.deepEqual(publicDetail.broken.map((item) => item.slug), ["missing-note"]);
+  assert.deepEqual(getDetailForViewer("public-note", admin, notes)?.broken.map((item) => item.slug), ["missing-note"]);
   assert.ok(publicDetail.previous === null || publicDetail.previous.visibility === "public");
   assert.ok(publicDetail.next === null || publicDetail.next.visibility === "public");
 });

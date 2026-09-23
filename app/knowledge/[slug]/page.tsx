@@ -94,7 +94,7 @@ export default async function KnowledgeDetailPage({
           <KnowledgeMarkdown
             note={note}
             relations={markdownRelations}
-            showBrokenLinkWarnings={note.visibility === "private" || note.status === "draft"}
+            showBrokenLinkWarnings={note.showBrokenLinkWarnings}
           />
           <KnowledgeRelations
             outgoing={note.outgoing}

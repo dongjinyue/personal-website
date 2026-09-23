@@ -139,9 +139,20 @@
 .article :global(.knowledge-code-block) button:hover { color: #fff; background: #202a40; }
 .article :global(.knowledge-code-block) pre { margin: 0; padding: 18px; overflow-x: auto; scrollbar-gutter: stable; }
 .article :global(.knowledge-code-block) code { font: 0.84rem/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre; }
+.article :global(.knowledge-code-block) :global(.hljs-keyword),
+.article :global(.knowledge-code-block) :global(.hljs-selector-tag) { color: #a9c8ff; }
+.article :global(.knowledge-code-block) :global(.hljs-string),
+.article :global(.knowledge-code-block) :global(.hljs-attr) { color: #aee6bb; }
+.article :global(.knowledge-code-block) :global(.hljs-number),
+.article :global(.knowledge-code-block) :global(.hljs-literal) { color: #f5c596; }
+.article :global(.knowledge-code-block) :global(.hljs-comment) { color: #a4b1c9; }
+.article :global(.knowledge-code-block) :global(.hljs-title),
+.article :global(.knowledge-code-block) :global(.hljs-built_in) { color: #d4baff; }
 .article :global(.knowledge-code-status) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .article :global(.knowledge-image-viewer) { display: block; margin: 1.6rem 0; }
+.article :global(.knowledge-image-row) { margin-block: 1rem; }
+.article :global(.knowledge-image-row) :global(.knowledge-image-viewer) { margin-block: 0.6rem; }
 .article :global(.knowledge-image-trigger) { width: 100%; min-height: 12rem; display: grid; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--line); border-radius: 0.75rem; background: var(--background); cursor: zoom-in; }
 .article :global(.knowledge-image-trigger) img { display: block; max-width: 100%; max-height: 42rem; object-fit: contain; }
 .article :global(.knowledge-image-trigger):hover { border-color: var(--accent); }
@@ -154,6 +165,7 @@
 .article :global(.knowledge-image-dialog-header) button { min-width: 6.5rem; min-height: 44px; color: var(--surface); border: 0; border-radius: 999px; background: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
 .article :global(.knowledge-image-dialog-body) { max-height: calc(100dvh - 88px); display: grid; place-items: center; overflow: auto; padding: 14px; background: var(--background); }
 .article :global(.knowledge-image-dialog-body) img { display: block; max-width: 100%; height: auto; }
+.article :global(.knowledge-image-dialog-error) { min-height: 12rem; display: grid; place-items: center; margin: 0; color: var(--muted); text-align: center; }
 
 .outline { position: sticky; top: 6rem; align-self: start; padding: 18px 16px; border-left: 1px solid var(--line); }
 .outline h2 { margin: 6px 0 13px; font-size: 0.95rem; }
@@ -225,4 +237,5 @@
 
 @media (forced-colors: active) {
   .article :global(.knowledge-code-block) { border: 1px solid CanvasText; background: Canvas; color: CanvasText; }
+  .article :global(.knowledge-code-block) :global([class^="hljs-"]) { color: inherit; }
 }
