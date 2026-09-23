@@ -1,5 +1,6 @@
 import { analyzeMarkdown } from "./markdown";
 import { canReadKnowledgeNote, type KnowledgeViewer } from "./access";
+import { KnowledgeGitError } from "./git-source";
 import type { KnowledgeSnapshot, KnowledgeSource } from "./snapshot";
 
 export type KnowledgeAsset = { body: Buffer; contentType: string };
@@ -19,7 +20,7 @@ export async function normalizeAttachmentPath(path: string | readonly string[]):
 }
 
 function isMissingGitBlob(error: unknown): boolean {
-  return error instanceof Error && error.message === "知识库 Git 读取文件失败";
+  return error instanceof KnowledgeGitError && error.code === "missing-object";
 }
 
 /** 先授权笔记、再确认它实际引用此附件，最后读取固定提交的二进制对象。 */

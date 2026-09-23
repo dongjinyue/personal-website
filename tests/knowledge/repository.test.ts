@@ -106,4 +106,17 @@ test("详情关系、失效链接和相邻笔记不会泄漏私密或草稿 slug
   assert.deepEqual(detail.backlinks.map((item) => item.slug), []);
   assert.equal(detail.previous, null);
   assert.equal(detail.next?.slug, "public-other");
+  assert.equal("path" in detail.outgoing[0], false);
+  assert.equal("markdown" in detail.outgoing[0], false);
+});
+
+test("组合字符查询命中原文，并从正文后段生成有界摘要", () => {
+  const body = `${"前置内容 ".repeat(40)}Cafe\u0301 在正文末尾。`;
+  const result = queryKnowledge([note("accent", { markdown: body })], parseKnowledgeQuery({ q: "CAFÉ" }));
+  assert.match(result.items[0].excerpt, /Cafe\u0301/);
+  assert.ok(result.items[0].excerpt.length <= 160);
+  assert.deepEqual(result.items[0].highlights, [
+    { text: "Cafe\u0301", matched: true },
+    { text: " 在正文末尾。", matched: false },
+  ]);
 });

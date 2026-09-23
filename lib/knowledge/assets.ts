@@ -3,7 +3,7 @@ import "server-only";
 import { getAssetForViewer, type KnowledgeAsset } from "./asset-policy";
 import { GitKnowledgeSource } from "./git-source";
 import { getKnowledgeViewerForCurrentUser } from "./repository";
-import { getKnowledgeSnapshot, type KnowledgeSnapshot, type KnowledgeSource } from "./snapshot";
+import { getKnowledgeSnapshot } from "./snapshot";
 
 export type { KnowledgeAsset } from "./asset-policy";
 

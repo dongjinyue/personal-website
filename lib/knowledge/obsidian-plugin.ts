@@ -36,7 +36,7 @@ function normalizeAnchor(anchor: string): string | null {
 
 /** 解析 Obsidian 双链，同时保留标题锚点和块锚点。 */
 export function parseObsidianLink(value: string): ObsidianLink | null {
-  const [destinationPart, aliasPart] = value.split(/\|(.*)/s, 2);
+  const [destinationPart, aliasPart] = value.split(/\|([\s\S]*)/, 2);
   const destination = destinationPart.trim();
   if (!destination) return null;
   const hashIndex = destination.indexOf("#");
@@ -91,7 +91,7 @@ export function normalizeKnowledgeAssetReference(value: string): string | null {
 
 /** 将网站知识库链接和相对 Markdown 链接统一为 slug 路由。 */
 export function normalizeMarkdownKnowledgeLink(value: string): { target: string; href: string } | null {
-  const [pathPart, rawFragment] = value.split(/#(.*)/s, 2);
+  const [pathPart, rawFragment] = value.split(/#([\s\S]*)/, 2);
   const knowledgeMatch = pathPart.match(/^\/knowledge\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/);
   const relativeMatch = pathPart.match(/(?:^|\/)([a-z0-9]+(?:-[a-z0-9]+)*)\.md$/i);
   const target = knowledgeMatch?.[1] ?? relativeMatch?.[1].toLowerCase();
@@ -119,7 +119,7 @@ function transformWikiText(value: string): MdastNode[] {
     const index = match.index ?? 0;
     if (index > cursor) nodes.push(text(value.slice(cursor, index)));
     if (match[1] === "!") {
-      const [assetPart, sizeOrAlias] = match[2].split(/\|(.*)/s, 2);
+      const [assetPart, sizeOrAlias] = match[2].split(/\|([\s\S]*)/, 2);
       const asset = normalizeKnowledgeAssetReference(assetPart);
       if (asset) {
         nodes.push({

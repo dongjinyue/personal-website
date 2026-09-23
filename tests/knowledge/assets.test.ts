@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { getAssetForViewer, normalizeAttachmentPath } from "../../lib/knowledge/asset-policy";
 import type { KnowledgeViewer } from "../../lib/knowledge/access";
+import { KnowledgeGitError } from "../../lib/knowledge/git-source";
 import type { KnowledgeSnapshot, KnowledgeSource } from "../../lib/knowledge/snapshot";
 
 const guest: KnowledgeViewer = { role: "guest" };
@@ -66,8 +67,11 @@ test("公开笔记不能借附件路由读取只由私密笔记引用的图片",
 });
 
 test("已引用附件的 Git blob 缺失时返回空，不吞没其他来源错误", async () => {
-  const missingBlob: KnowledgeSource = { ...source, async readBinary() { throw new Error("知识库 Git 读取文件失败"); } };
+  const missingBlob: KnowledgeSource = { ...source, async readBinary() { throw new KnowledgeGitError("missing-object", "读取文件"); } };
   assert.equal(await getAssetForViewer("private-note", ["secret.png"], admin, snapshot, missingBlob), null);
-  const unavailableSource: KnowledgeSource = { ...source, async readBinary() { throw new Error("连接知识库服务失败"); } };
-  await assert.rejects(() => getAssetForViewer("private-note", ["secret.png"], admin, snapshot, unavailableSource), /连接知识库服务失败/);
+  const unavailableSource: KnowledgeSource = { ...source, async readBinary() { throw new KnowledgeGitError("operation-failed", "读取文件"); } };
+  await assert.rejects(
+    () => getAssetForViewer("private-note", ["secret.png"], admin, snapshot, unavailableSource),
+    (error: unknown) => error instanceof KnowledgeGitError && error.code === "operation-failed",
+  );
 });

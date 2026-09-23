@@ -33,9 +33,26 @@ function validateRepositoryPath(value: string): string {
   return segments.join("/");
 }
 
-function gitError(operation: string): Error {
+export type KnowledgeGitErrorCode = "missing-object" | "operation-failed";
+
+/** 不向响应泄漏 Git stderr，但保留调用方需要的安全错误类别。 */
+export class KnowledgeGitError extends Error {
+  constructor(readonly code: KnowledgeGitErrorCode, operation: string) {
+    super(`知识库 Git ${operation}失败`);
+    this.name = "KnowledgeGitError";
+  }
+}
+
+function reportsMissingPath(error: unknown): boolean {
   // 不附带原始进程错误，因为 stderr 可能包含服务器上的绝对路径。
-  return new Error(`知识库 Git ${operation}失败`);
+  const stderr = typeof error === "object" && error && "stderr" in error
+    ? String((error as { stderr?: unknown }).stderr ?? "")
+    : "";
+  return /(?:does not exist in|exists on disk, but not in)/i.test(stderr);
+}
+
+function gitError(operation: string): KnowledgeGitError {
+  return new KnowledgeGitError("operation-failed", operation);
 }
 
 /** 从 Git 对象数据库读取固定提交，绝不读取可能正在变动的工作区正文。 */
@@ -60,7 +77,11 @@ export class GitKnowledgeSource {
     }
   }
 
-  private async executeBuffer(args: string[], operation: string): Promise<Buffer> {
+  private async executeBuffer(
+    args: string[],
+    operation: string,
+    commitForMissingPath?: string,
+  ): Promise<Buffer> {
     try {
       const { stdout } = await execFileAsync("git", args, {
         cwd: this.vaultDir,
@@ -69,7 +90,16 @@ export class GitKnowledgeSource {
         windowsHide: true,
       });
       return stdout;
-    } catch {
+    } catch (error) {
+      if (commitForMissingPath && reportsMissingPath(error)) {
+        try {
+          // Git 对不存在的提交也可能报告“路径不存在”，因此先确认提交对象真实可读。
+          await this.executeText(["cat-file", "-e", `${commitForMissingPath}^{commit}`], "验证版本");
+        } catch {
+          throw gitError(operation);
+        }
+        throw new KnowledgeGitError("missing-object", operation);
+      }
       throw gitError(operation);
     }
   }
@@ -102,6 +132,10 @@ export class GitKnowledgeSource {
   async readBinary(commit: string, filePath: string): Promise<Buffer> {
     const safeCommit = validateCommit(commit);
     const safePath = validateRepositoryPath(filePath);
-    return this.executeBuffer(["show", `${safeCommit}:${safePath}`], "读取文件");
+    return this.executeBuffer(
+      ["show", `${safeCommit}:${safePath}`],
+      "读取文件",
+      safeCommit,
+    );
   }
 }

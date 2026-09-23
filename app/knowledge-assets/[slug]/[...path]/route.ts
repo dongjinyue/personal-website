@@ -11,7 +11,7 @@ export async function GET(
   const asset = await getKnowledgeAssetForCurrentUser(slug, path);
   if (!asset) return new Response("未找到图片。", { status: 404 });
 
-  return new Response(asset.body, {
+  return new Response(new Uint8Array(asset.body), {
     headers: {
       "Content-Type": asset.contentType,
       "Cache-Control": "private, no-store",

@@ -2,9 +2,9 @@
 
 ## 状态
 
-DONE_WITH_CONCERNS
+DONE
 
-实现范围已完成并提交前自审；但该工作树的 `node_modules`（依赖目录）损坏，无法完成全量测试、ESLint（代码规范检查）和 TypeScript（静态类型检查）的最终 GREEN 验证。
+实现范围与两轮审查修复均已完成；修复轮次 2 恢复依赖后完成了测试、ESLint（代码规范检查）、TypeScript（静态类型检查）和生产构建验证。
 
 ## TDD 记录
 
@@ -101,3 +101,35 @@ DONE_WITH_CONCERNS
 
 - `git diff --check`：通过。
 - `tsc --noEmit`：本次修复后的唯一剩余报错为全局 `RouteContext` 不存在；该类型由 Next.js 的 `next dev`、`next build` 或 `next typegen` 自动生成，非本次策略代码错误。
+
+## 修复轮次 2（FIX_BASE: `61964364`）
+
+### RED
+
+1. 使用可读取依赖运行 `repository.test.ts`、`assets.test.ts` 与 `git-source.test.ts`：9 passed、2 failed。旧附件测试仍用普通 `Error` 模拟缺失对象；`Cafe\u0301` 位于正文第 161 字之后时，摘要丢失原文且高亮没有命中。
+2. 新增真实 Git 语义测试后单独运行 `git-source.test.ts`：1 passed、1 failed。不存在的 40 位提交也可能让 `git show` 报“路径不存在”，原实现据 stderr 文本将其误判为 `missing-object`。
+3. `next typegen` 后运行 `tsc --noEmit`，暴露 FIX_BASE 已有的 4 个编译错误：附件路由的 `Buffer` 响应体类型不兼容，以及 3 处 `/s` 正则超出 ES2017 编译目标。
+4. 完整 `npm run lint` 首次运行发现 FIX_BASE 已有的 1 个错误与 2 个警告：`js-yaml` 使用 CommonJS `require`，以及两个未使用类型导入。
+
+### GREEN 与实现
+
+- `KnowledgeGitError` 提供 `missing-object` / `operation-failed` 安全分类；只有 Git 报路径缺失且 `cat-file -e <commit>^{commit}` 证明提交对象真实可读时才返回缺失。无效提交、对象库损坏、进程/权限/缓冲区等无匹配错误均归为执行失败。
+- 真实 Git 测试覆盖指定提交缺少路径、无效提交以及删除松散 blob 后的对象库损坏；附件策略测试证明只吞掉明确的 `missing-object`。
+- 搜索文本按字素簇建立归一化文本到 UTF-16 原文范围的映射；摘要保留原始大小写与组合字符，正文高亮从后段命中位置生成最多 160 字的片段。
+- 关系项由显式字段构造，不含 `path` 或 `markdown`。
+- `Response` 使用 `Uint8Array` 包装二进制正文；3 处 dotAll 正则改为 ES2017 等价的 `[\\s\\S]*`；`js-yaml` 改用带类型的 ESM 导入并移除无用类型导入。
+
+### 验证记录
+
+| 命令 | 结果 |
+| --- | --- |
+| `npm run test:knowledge` | 49 passed，0 failed |
+| `npx next typegen` | Route types generated successfully |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| 相关文件 `npx eslint ...` | 通过，退出码 0 |
+| `npm run lint` | 全项目通过，退出码 0 |
+| `npm run build` | 编译、TypeScript、12/12 静态页面及路由生成全部通过，退出码 0 |
+
+### Concerns
+
+- 工作树原有 `node_modules` 是不完整的 pnpm 目录，首次构建因缺少 `enhanced-resolve/lib/index.js` 失败；按 `package-lock.json` 执行 `npm ci` 后，还需清理引用旧 pnpm 路径的 `.next` 缓存。全新生产构建随后通过，该环境故障未作为代码通过证据。

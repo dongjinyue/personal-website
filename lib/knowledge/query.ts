@@ -1,6 +1,6 @@
 import { filterVisibleNotes, type KnowledgeViewer } from "./access";
 import { analyzeMarkdown } from "./markdown";
-import { createExcerpt, normalizeSearchText } from "./text";
+import { createExcerpt, findNormalizedMatch, normalizeSearchText } from "./text";
 import type { KnowledgeNoteSource } from "./types";
 
 export type KnowledgeSort = "updated-desc" | "created-asc" | "title-asc";
@@ -99,39 +99,29 @@ function compareNotes(left: KnowledgeNoteSource, right: KnowledgeNoteSource, sor
 }
 
 function fragmentMatch(value: string, query: string): Array<{ text: string; matched: boolean }> {
-  const normalizedQuery = normalizeSearchText(query);
-  if (!normalizedQuery) return [];
-  let normalized = "";
-  const ranges: Array<{ start: number; end: number; normalizedStart: number; normalizedEnd: number }> = [];
-  let offset = 0;
-  for (const character of value) {
-    const normalizedCharacter = character.normalize("NFKC").toLocaleLowerCase();
-    ranges.push({ start: offset, end: offset + character.length, normalizedStart: normalized.length, normalizedEnd: normalized.length + normalizedCharacter.length });
-    normalized += normalizedCharacter;
-    offset += character.length;
-  }
-  const matchStart = normalized.indexOf(normalizedQuery);
-  if (matchStart < 0) return [];
-  const matchEnd = matchStart + normalizedQuery.length;
-  const first = ranges.find((range) => range.normalizedEnd > matchStart);
-  const last = [...ranges].reverse().find((range) => range.normalizedStart < matchEnd);
-  if (!first || !last) return [];
+  const match = findNormalizedMatch(value, query);
+  if (!match) return [];
   return [
-    ...(first.start ? [{ text: value.slice(0, first.start), matched: false }] : []),
-    { text: value.slice(first.start, last.end), matched: true },
-    ...(last.end < value.length ? [{ text: value.slice(last.end), matched: false }] : []),
+    ...(match.start ? [{ text: value.slice(0, match.start), matched: false }] : []),
+    { text: value.slice(match.start, match.end), matched: true },
+    ...(match.end < value.length ? [{ text: value.slice(match.end), matched: false }] : []),
   ];
 }
 
 function findHighlights(note: KnowledgeNoteSource, query: string): Array<{ text: string; matched: boolean }> {
   const normalized = normalizeSearchText(query);
   if (!normalized) return [];
-  const values = [note.title, note.description ?? "", ...note.tags, analyzeMarkdown(note.markdown).plainText.slice(0, 160)];
+  const values = [note.title, note.description ?? "", ...note.tags];
   for (const value of values) {
-    const fragments = fragmentMatch(value, query);
+    const fragments = fragmentMatch(createExcerpt(value, query), query);
     if (fragments.length) return fragments;
   }
-  return [];
+
+  const body = analyzeMarkdown(note.markdown).plainText;
+  const match = findNormalizedMatch(body, query);
+  if (!match) return [];
+  // 正文高亮从命中处开始截取，避免返回前 160 字或整篇正文。
+  return fragmentMatch(body.slice(match.start, match.start + 160), query);
 }
 
 /**

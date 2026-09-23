@@ -1,10 +1,5 @@
 import matter from "gray-matter";
-
-// gray-matter 的间接依赖未提供 TypeScript 声明；只声明这里实际使用的 YAML API。
-const yaml = require("js-yaml") as {
-  JSON_SCHEMA: unknown;
-  load(value: string, options: { schema: unknown }): unknown;
-};
+import * as yaml from "js-yaml";
 
 import type {
   KnowledgeDiagnostic,

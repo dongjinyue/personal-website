@@ -31,7 +31,17 @@ export function filterVisibleNotes(
 }
 
 function toRelationItem(note: KnowledgeNoteSource): KnowledgeRelationItem {
-  return { ...note, tags: [...note.tags] };
+  return {
+    slug: note.slug,
+    title: note.title,
+    category: note.category,
+    tags: [...note.tags],
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+    description: note.description,
+    visibility: note.visibility,
+    status: note.status,
+  };
 }
 
 /** 详情关系先使用全量索引判定链接是否存在，再裁剪为当前查看者可见内容。 */

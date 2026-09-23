@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import test from "node:test";
 
-import { GitKnowledgeSource } from "../../lib/knowledge/git-source";
+import { GitKnowledgeSource, KnowledgeGitError } from "../../lib/knowledge/git-source";
 
 const execFileAsync = promisify(execFile);
 
@@ -47,11 +47,30 @@ test("始终从指定提交读取文字、二进制与文件列表", async (t) =
     Buffer.from(firstMarkdown),
   );
 
+  await assert.rejects(
+    () => source.readBinary(firstCommit, "notes/programming/missing.md"),
+    (error: unknown) => error instanceof KnowledgeGitError && error.code === "missing-object",
+  );
+
+  await assert.rejects(
+    () => source.readBinary("f".repeat(40), "notes/programming/a.md"),
+    (error: unknown) => error instanceof KnowledgeGitError && error.code === "operation-failed",
+  );
+
   await t.test("拒绝目录穿越、绝对路径、反斜杠和不可信提交", async () => {
     for (const unsafePath of ["../secret", "/notes/a.md", "notes\\a.md", "notes/./a.md", "notes//a.md"]) {
       await assert.rejects(() => source.readText(firstCommit, unsafePath), /不安全/);
     }
     await assert.rejects(() => source.readText("--help", "notes/a.md"), /提交/);
+  });
+
+  await t.test("对象库损坏不能伪装成文件不存在", async () => {
+    const blob = await git(repository, ["rev-parse", `${firstCommit}:notes/programming/a.md`]);
+    await unlink(path.join(repository, ".git", "objects", blob.slice(0, 2), blob.slice(2)));
+    await assert.rejects(
+      () => source.readBinary(firstCommit, "notes/programming/a.md"),
+      (error: unknown) => error instanceof KnowledgeGitError && error.code === "operation-failed",
+    );
   });
 });
 
