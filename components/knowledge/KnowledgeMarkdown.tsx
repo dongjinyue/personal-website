@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isValidElement, type ReactNode } from "react";
 import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
@@ -9,6 +10,8 @@ import {
 } from "@/lib/knowledge/obsidian-plugin";
 import type { KnowledgeRelations } from "@/lib/knowledge/relations";
 import type { KnowledgeNoteSource } from "@/lib/knowledge/types";
+import CodeBlock from "./CodeBlock";
+import KnowledgeImage from "./KnowledgeImage";
 
 type Props = {
   note: KnowledgeNoteSource;
@@ -69,6 +72,13 @@ function getKnowledgeLinkTarget(href: string | undefined): string | null {
   }
 }
 
+function nodeText(value: ReactNode): string {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map(nodeText).join("");
+  if (isValidElement<{ children?: ReactNode }>(value)) return nodeText(value.props.children);
+  return "";
+}
+
 export function KnowledgeMarkdown({
   note,
   relations,
@@ -77,6 +87,24 @@ export function KnowledgeMarkdown({
   const brokenTargets = new Set(relations.brokenBySlug.get(note.slug) ?? []);
 
   const components: Components = {
+    p({ children, node, ...props }) {
+      // 图片查看器包含原生 dialog，图片段落改用 flow 容器避免生成无效的 p > figure 结构。
+      const containsImage = node?.children.some(
+        (child) => child.type === "element" && child.tagName === "img",
+      );
+      return containsImage
+        ? <div className="knowledge-image-row" {...props}>{children}</div>
+        : <p {...props}>{children}</p>;
+    },
+    pre({ children }) {
+      const codeElement = isValidElement<{ className?: string; children?: ReactNode }>(children)
+        ? children
+        : null;
+      const className = codeElement?.props.className ?? "";
+      const language = className.match(/(?:^|\s)language-([\w-]+)/)?.[1] ?? "text";
+      const code = nodeText(codeElement?.props.children ?? children).replace(/\n$/, "");
+      return <CodeBlock code={code} language={language} />;
+    },
     a({ href, children, node, ...props }) {
       // react-markdown 的 AST 节点不能透传为 DOM 属性。
       void node;
@@ -112,10 +140,7 @@ export function KnowledgeMarkdown({
       if (!assetUrl || (!isKnowledgeAsset && !source.includes("attachments/"))) {
         return <span role="img">图片不可用：{alt || "未命名图片"}</span>;
       }
-      // Task 3 仅输出安全、语义化图片；Task 6 再增加查看大图交互。
-      // 动态 Git 附件没有构建时尺寸，Task 6 会用稳定容器补齐布局与大图交互。
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img src={assetUrl} alt={alt ?? ""} loading="lazy" />;
+      return <KnowledgeImage src={assetUrl} alt={alt ?? ""} />;
     },
     blockquote({ children, node, ...props }) {
       const callout = node?.properties?.dataCallout;

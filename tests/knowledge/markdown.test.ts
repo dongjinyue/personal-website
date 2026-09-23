@@ -94,7 +94,7 @@ test("原始 HTML、危险协议和脚本内容不进入分析安全文本或渲
   assert.doesNotMatch(html, /script|onerror|javascript:|alert\(/i);
 });
 
-test("服务端渲染安全链接、附件地址、Callout 和非交互代码块", () => {
+test("服务端渲染安全链接、附件地址、Callout 和可复制代码块", () => {
   const source = note(
     "source-note",
     `参见 [[target-note#API 接口|目标笔记]]、[普通链接](target-note.md#API%20接口) 与 [[missing-note]]。
@@ -122,7 +122,8 @@ const value = 1;
   assert.match(html, /data-callout="tip"/);
   assert.match(html, /链接不存在/);
   assert.match(html, /<pre><code class="language-ts/);
-  assert.doesNotMatch(html, /复制|button/);
+  assert.match(html, /<button[^>]*>复制<\/button>/);
+  assert.match(html, /aria-live="polite"/);
 });
 
 test("分析目录与渲染标题共享 GitHub slugger 规则", () => {
