@@ -2,6 +2,34 @@
 
 本文件记录已经完成并可从代码或数据库迁移中验证的重要变化。计划中的功能放在学习路线，不在这里提前宣布。
 
+## 2026-09-22：新闻列表搜索、分页与英文翻译
+
+- 新闻列表页 `/news` 新增搜索栏，支持按关键词搜索标题和摘要（Supabase `ilike` 模糊匹配，URL 参数 `q` 驱动）。
+- 新闻列表页分类筛选从客户端 `useState` 改为 URL 参数驱动，搜索和分类可组合使用并反映在 URL 中。
+- 新闻列表页新增分页导航组件（复用 `getPaginationItems`），页码链接保留搜索和分类参数。
+- `/news` 页面改为 `force-dynamic`，服务端按搜索、分类和分页参数查询。
+- 新建迁移 `20260922090000_add_news_translation_columns.sql`：为 `news_articles` 表新增 `title_zh` 和 `description_zh` 字段，存储英文新闻的中文翻译。
+- 采集脚本使用 MyMemory 翻译接口：英文源的标题和摘要自动翻译为中文写入 `title_zh`/`description_zh`，翻译接口不可达时自动跳过，不影响采集。
+- 前端优先展示中文翻译（`titleZh || title`），无翻译时回退英文原文。
+- 更新 RSS 源：移除不可达的 Anthropic、Hugging Face、Google AI Blog 和返回 HTML 的机器之心，替换为 Google DeepMind、TechCrunch AI、The Verge AI（支持 Atom 1.0 格式解析）。
+- 采集脚本新增 `--dry-run` 参数，无需密钥即可验证采集、解析、分类和翻译全流程。
+
+## 2026-09-21：AI 新闻自动采集与动态展示
+
+- 新建 `news_articles` 数据表（标题、来源链接、来源名称、摘要、分类、发布时间、采集时间、`is_public`/`hide_from_guests` 可见性控制），配套行级安全策略和 `updated_at` 自动维护触发器。
+- 新建采集脚本 `ops/news-collector/collect-news.mjs`：从 5 个中英文 AI 新闻 RSS 源拉取元数据，按标题关键词匹配分类，按 `source_url` 去重，默认公开写入 Supabase。
+- 新建 systemd service 和 timer 配置，每 6 小时运行采集脚本；采集脚本使用 `service_role` 密钥绕过 RLS 直接写入，密钥配置在服务器 `~/.config/news-collector.env`，不写入代码仓库。
+- 新建 `lib/news-repository.ts`（公开读取）和 `lib/admin-news-repository.ts`（后台管理），遵循项目现有 repository 模式。
+- 改造 `components/news/NewsHome.tsx` 从硬编码 6 条示例改为从 Supabase 动态读取，保留原有 UI 风格和客户端分类筛选。
+- 首页 `/` 每小时静态重新生成，展示最新 4 条新闻；`/news` 页面展示全部新闻。
+- 新建 `/admin/news` 管理页面：分页列表、永久删除（带确认弹窗和版本校验）、批量游客可见性设置，遵循现有 admin 页面模式和 `requireAdmin()` 校验。
+- 后台导航新增"新闻管理"入口。
+- 新建 `ops/news-collector/README.md` 部署指南，指导在服务器上配置 `service_role` 密钥、验证连通性和安装 systemd 服务。
+
+## 2026-09-23：修正新闻后台写入授权
+
+- 新增 `news_articles` 管理员新增、修改和删除策略，确保后台 Server Action（服务端操作）完成管理员身份校验后，数据库行级安全策略也会再次限制写入权限。
+
 ## 2026-09-10：启用 Obsidian 服务器只读同步
 
 - 为 `dongjinyue/obsidian-vault` 配置仓库专用的只读 Deploy Key（部署密钥），服务器不能用该密钥向仓库写入内容。

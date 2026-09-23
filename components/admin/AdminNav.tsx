@@ -8,6 +8,7 @@ const links = [
   { href: "/admin/tools", label: "工具管理" },
   { href: "/admin/categories", label: "分类管理" },
   { href: "/admin/projects", label: "项目管理" },
+  { href: "/admin/news", label: "新闻管理" },
 ];
 
 export default function AdminNav() {

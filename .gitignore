@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -42,6 +43,11 @@ yarn-error.log*
 
 # 本地设计讨论草图，由 brainstorming（需求梳理）工具生成
 /.superpowers/
+
+# 本机剪贴板收件箱及开发服务器输出，不属于项目源码
+/.dumate/inbox/
+/dev-stdout.log
+/dev-stderr.log
 
 # typescript
 *.tsbuildinfo
