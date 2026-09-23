@@ -5,9 +5,9 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_VAULT_DIR = "/home/ubuntu/content/obsidian-vault";
 const COMMIT_PATTERN = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
 
-function validateCommit(commit: string): string {
+function validateCommit(commit: string, operation: string): string {
   if (!COMMIT_PATTERN.test(commit)) {
-    throw new Error("知识库提交标识不合法");
+    throw gitError(operation);
   }
   return commit;
 }
@@ -106,11 +106,11 @@ export class GitKnowledgeSource {
 
   async getHead(): Promise<string> {
     const head = (await this.executeText(["rev-parse", "HEAD"], "读取版本")).trim();
-    return validateCommit(head);
+    return validateCommit(head, "读取版本");
   }
 
   async listFiles(commit: string, prefix: string): Promise<string[]> {
-    const safeCommit = validateCommit(commit);
+    const safeCommit = validateCommit(commit, "列出文件");
     const safePrefix = validateRepositoryPath(prefix);
     const output = await this.executeBuffer(
       ["ls-tree", "-r", "--name-only", "-z", safeCommit, "--", safePrefix],
@@ -130,7 +130,7 @@ export class GitKnowledgeSource {
   }
 
   async readBinary(commit: string, filePath: string): Promise<Buffer> {
-    const safeCommit = validateCommit(commit);
+    const safeCommit = validateCommit(commit, "读取文件");
     const safePath = validateRepositoryPath(filePath);
     return this.executeBuffer(
       ["show", `${safeCommit}:${safePath}`],

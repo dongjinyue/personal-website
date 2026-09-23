@@ -120,3 +120,15 @@ test("组合字符查询命中原文，并从正文后段生成有界摘要", ()
     { text: " 在正文末尾。", matched: false },
   ]);
 });
+
+test("上下文相关小写使用整体字符串语义并映射回希腊原文", () => {
+  const result = queryKnowledge(
+    [note("greek", { markdown: "ΟΣ" })],
+    parseKnowledgeQuery({ q: "ος" }),
+  );
+
+  assert.equal(result.total, 1);
+  assert.deepEqual(result.items[0].highlights, [
+    { text: "ΟΣ", matched: true },
+  ]);
+});

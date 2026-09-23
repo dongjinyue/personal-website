@@ -61,7 +61,12 @@ test("始终从指定提交读取文字、二进制与文件列表", async (t) =
     for (const unsafePath of ["../secret", "/notes/a.md", "notes\\a.md", "notes/./a.md", "notes//a.md"]) {
       await assert.rejects(() => source.readText(firstCommit, unsafePath), /不安全/);
     }
-    await assert.rejects(() => source.readText("--help", "notes/a.md"), /提交/);
+    for (const invalidCommit of ["--help", "a".repeat(39), "A".repeat(40), "g".repeat(40)]) {
+      await assert.rejects(
+        () => source.readBinary(invalidCommit, "notes/a.md"),
+        (error: unknown) => error instanceof KnowledgeGitError && error.code === "operation-failed",
+      );
+    }
   });
 
   await t.test("对象库损坏不能伪装成文件不存在", async () => {

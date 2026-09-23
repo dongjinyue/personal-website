@@ -133,3 +133,31 @@ DONE
 ### Concerns
 
 - 工作树原有 `node_modules` 是不完整的 pnpm 目录，首次构建因缺少 `enhanced-resolve/lib/index.js` 失败；按 `package-lock.json` 执行 `npm ci` 后，还需清理引用旧 pnpm 路径的 `.next` 缓存。全新生产构建随后通过，该环境故障未作为代码通过证据。
+
+## 修复轮次 3（FIX_BASE: `d7a578dd`）
+
+### RED
+
+- 在 `git-source.test.ts` 中将 `--help`、错误长度、大写和非十六进制 commit（提交标识）统一断言为 `KnowledgeGitError(code="operation-failed")`。定向测试失败，实际得到普通 `Error: 知识库提交标识不合法`。
+- 在 `repository.test.ts` 中新增希腊 `ΟΣ` 以查询 `ος` 命中的回归测试。过滤阶段使用整体小写所以结果存在，但逐字素簇小写生成 `οσ`，导致 `highlights` 实际为空。
+
+### GREEN 与实现
+
+- `validateCommit()` 接收当前 Git 操作名称，所有非法 commit 在进入进程包装器前也统一抛出脱敏的 `KnowledgeGitError(code="operation-failed")`；附件策略现有测试继续证明只有 `missing-object` 会被映射为 `null`。
+- 文本映射先整体执行 NFKC，再对完整字符串执行一次 `toLowerCase()`；字素簇只负责追踪 NFKC 输出对应的原文范围，不再单独参与大小写转换。该实现同时保留 `Cafe\u0301` 组合字符、正文后段命中和希腊 final sigma（词尾西格玛）语义。
+- 定向测试：9 passed、0 failed；完整知识库测试：50 passed、0 failed。
+
+### 验证记录
+
+| 命令 | 结果 |
+| --- | --- |
+| `npm run test:knowledge` | 50 passed，0 failed |
+| `npx next typegen` | Route types generated successfully |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run lint` | 全项目通过，退出码 0 |
+| `npm run build` | 生产构建通过，退出码 0 |
+| `git diff --check` | 通过，退出码 0 |
+
+### Concerns
+
+- 无遗留代码问题；本轮未引入 HTML 渲染或改变既有关系摘要字段白名单。
