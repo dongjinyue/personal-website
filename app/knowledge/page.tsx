@@ -49,7 +49,7 @@ export default async function KnowledgePage({ searchParams }: PageProps<"/knowle
       </header>
 
       <section className={styles.searchPanel} aria-label="搜索知识库">
-        <KnowledgeSearch key={query.q} initialQuery={query.q} />
+        <KnowledgeSearch initialQuery={query.q} />
         <p className={styles.searchHint}>支持搜索标题、正文与标签，筛选状态会保存在网址中。</p>
       </section>
 
@@ -67,7 +67,7 @@ export default async function KnowledgePage({ searchParams }: PageProps<"/knowle
             <div className={styles.resultHeader}>
               <div>
                 <p className={styles.resultKicker}>检索结果</p>
-                <h2 id="knowledge-results-heading">
+                <h2 id="knowledge-results-heading" role="status" aria-live="polite" aria-atomic="true">
                   {result.total > 0 ? `${rangeStart}–${rangeEnd} / 共 ${result.total} 篇` : "没有匹配项"}
                 </h2>
               </div>

@@ -59,6 +59,23 @@ export function buildKnowledgeUrl(query: KnowledgeQuery): string {
 export const buildClientKnowledgeUrl = buildKnowledgeUrl;
 
 /**
+ * 在防抖真正触发时合并浏览器里的最新筛选，避免延迟搜索回滚用户刚选择的条件。
+ */
+export function buildKnowledgeSearchUrl(search: string, nextQuery: string): string {
+  const params = new URLSearchParams(search);
+  const current = parseKnowledgeQuery({
+    q: params.getAll("q"),
+    category: params.getAll("category"),
+    tag: params.getAll("tag"),
+    sort: params.getAll("sort"),
+    page: params.getAll("page"),
+  });
+  const normalizedQuery = parseKnowledgeQuery({ q: nextQuery }).q;
+
+  return buildKnowledgeUrl({ ...current, q: normalizedQuery, page: 1 });
+}
+
+/**
  * 将浏览器或 Next.js 提供的原始参数按原值重建，以便页面识别默认值、
  * 重复参数、未知参数和空参数，并统一跳转到唯一的可分享地址。
  */

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  buildClientKnowledgeUrl,
+  buildKnowledgeSearchUrl,
   parseKnowledgeQuery,
 } from "@/lib/knowledge/url";
 import styles from "@/app/knowledge/knowledge.module.css";
@@ -17,11 +17,27 @@ export default function KnowledgeSearch({ initialQuery }: { initialQuery: string
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const composingRef = useRef(false);
+  const pendingQueryRef = useRef<string | null>(null);
   const [value, setValue] = useState(initialQuery);
 
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
+
+  useEffect(() => {
+    const urlQuery = parseKnowledgeQuery(
+      Object.fromEntries(searchParams.entries()),
+    ).q;
+
+    // 搜索导航完成后解除保护；较慢的旧响应不能覆盖仍在输入的新内容。
+    if (pendingQueryRef.current === urlQuery) {
+      pendingQueryRef.current = null;
+      return;
+    }
+    if (pendingQueryRef.current !== null) return;
+
+    setValue(urlQuery);
+  }, [searchParams]);
 
   function cancelPendingNavigation() {
     if (!timerRef.current) return;
@@ -29,9 +45,16 @@ export default function KnowledgeSearch({ initialQuery }: { initialQuery: string
     timerRef.current = null;
   }
 
+  function markPendingQuery(nextValue: string) {
+    const normalizedNext = parseKnowledgeQuery({ q: nextValue }).q;
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentQuery = parseKnowledgeQuery({ q: currentParams.getAll("q") }).q;
+    pendingQueryRef.current = normalizedNext === currentQuery ? null : normalizedNext;
+  }
+
   function navigate(nextValue: string) {
-    const current = parseKnowledgeQuery(Object.fromEntries(searchParams.entries()));
-    router.replace(buildClientKnowledgeUrl({ ...current, q: nextValue, page: 1 }), {
+    // 执行时读取浏览器当前地址，避免防抖任务持有安排时的旧筛选快照。
+    router.replace(buildKnowledgeSearchUrl(window.location.search, nextValue), {
       scroll: false,
     });
   }
@@ -46,6 +69,7 @@ export default function KnowledgeSearch({ initialQuery }: { initialQuery: string
 
   function clearSearch() {
     cancelPendingNavigation();
+    markPendingQuery("");
     setValue("");
     navigate("");
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -68,6 +92,7 @@ export default function KnowledgeSearch({ initialQuery }: { initialQuery: string
           autoComplete="off"
           onChange={(event) => {
             const nextValue = event.target.value;
+            markPendingQuery(nextValue);
             setValue(nextValue);
             if (!composingRef.current) {
               scheduleNavigation(nextValue);
@@ -85,6 +110,7 @@ export default function KnowledgeSearch({ initialQuery }: { initialQuery: string
             if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
             event.preventDefault();
             cancelPendingNavigation();
+            markPendingQuery(event.currentTarget.value);
             navigate(event.currentTarget.value);
           }}
         />

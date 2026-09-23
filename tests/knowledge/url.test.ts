@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildKnowledgeSearchUrl,
   buildKnowledgeUrl,
   buildRawKnowledgeUrl,
   parseKnowledgeQuery,
@@ -48,5 +49,15 @@ test("原始 URL 重建保留重复和未知参数供规范跳转判断", () => 
   assert.equal(
     buildRawKnowledgeUrl({ q: ["React", "Vue"], debug: "1" }),
     "/knowledge?q=React&q=Vue&debug=1",
+  );
+});
+
+test("延迟搜索提交基于最新 URL 保留分类、标签和排序", () => {
+  assert.equal(
+    buildKnowledgeSearchUrl(
+      "?category=programming&tag=React&sort=title-asc&page=4",
+      "  Server　Components  ",
+    ),
+    "/knowledge?q=Server+Components&category=programming&tag=React&sort=title-asc",
   );
 });
