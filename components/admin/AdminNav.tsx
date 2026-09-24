@@ -9,6 +9,7 @@ const links = [
   { href: "/admin/categories", label: "分类管理" },
   { href: "/admin/projects", label: "项目管理" },
   { href: "/admin/knowledge", label: "知识库状态" },
+  { href: "/admin/news", label: "新闻管理" },
 ];
 
 export default function AdminNav() {

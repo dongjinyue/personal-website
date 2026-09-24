@@ -1,0 +1,16 @@
+[Unit]
+Description=Collect AI news from RSS sources and insert into Supabase
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+EnvironmentFile=/home/ubuntu/.config/news-collector.env
+ExecStart=/usr/bin/node /home/ubuntu/personal-website/ops/news-collector/collect-news.mjs
+WorkingDirectory=/home/ubuntu/personal-website
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
