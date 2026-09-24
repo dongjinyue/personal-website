@@ -240,7 +240,7 @@ test("代码块保留语法高亮并复制包含原始结尾换行的文本", ()
   const html = renderMarkdown(note("code-note", "```js\nconst answer = 42;\n```"));
 
   assert.match(html, /<span class="hljs-keyword">const<\/span>/);
-  assert.match(html, /<code[^>]*>.*answer = .*;\n<\/code>/s);
+  assert.match(html, /<code[^>]*>[\s\S]*answer = [\s\S]*;\n<\/code>/);
 });
 
 test("链接和强调中的图片保持合法结构，源链接单独可访问", () => {

@@ -1,4 +1,4 @@
-import styles from "./knowledge.module.css";
+import styles from "../knowledge.module.css";
 
 export default function KnowledgeLoading() {
   return (

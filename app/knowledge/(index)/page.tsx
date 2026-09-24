@@ -7,7 +7,7 @@ import KnowledgeSearch from "@/components/knowledge/KnowledgeSearch";
 import { getKnowledgeListForCurrentUser } from "@/lib/knowledge/repository";
 import { buildKnowledgeUrl, buildRawKnowledgeUrl } from "@/lib/knowledge/url";
 import { getPaginationItems } from "@/lib/pagination";
-import styles from "./knowledge.module.css";
+import styles from "../knowledge.module.css";
 
 export const dynamic = "force-dynamic";
 
