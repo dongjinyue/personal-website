@@ -12,6 +12,8 @@ export type KnowledgeSource = {
 export type KnowledgeSnapshot = {
   version: string;
   generatedAt: string;
+  /** Git 中 notes 下的一级目录，包含用 .gitkeep 保留的空分类。 */
+  categories: readonly string[];
   notes: readonly KnowledgeNoteSource[];
   diagnostics: readonly KnowledgeDiagnostic[];
 };
@@ -103,9 +105,15 @@ async function buildSnapshot(
   commit: string,
   readText: (commit: string, path: string) => Promise<string>,
 ): Promise<KnowledgeSnapshot> {
-  const files = (await source.listFiles(commit, "notes"))
-    .filter((filePath) => filePath.startsWith("notes/") && filePath.endsWith(".md"))
+  const trackedPaths = (await source.listFiles(commit, "notes"))
+    .filter((filePath) => filePath.startsWith("notes/"))
     .sort();
+  // 使用被 Git 跟踪的文件路径发现分类；.gitkeep 使空目录也能作为分类保存。
+  const categories = [...new Set(trackedPaths.flatMap((filePath) => {
+    const segments = filePath.split("/");
+    return segments.length > 2 && segments[1] !== ".gitkeep" ? [segments[1]] : [];
+  }))].sort((left, right) => left.localeCompare(right, "zh-Hans-CN"));
+  const files = trackedPaths.filter((filePath) => filePath.endsWith(".md"));
   const parsed = await mapWithConcurrency(
     files,
     KNOWLEDGE_READ_CONCURRENCY,
@@ -144,6 +152,7 @@ async function buildSnapshot(
   return Object.freeze({
     version: commit,
     generatedAt: new Date().toISOString(),
+    categories: Object.freeze(categories),
     notes: Object.freeze(notes.map(freezeNote)),
     diagnostics: Object.freeze(diagnostics.map(freezeDiagnostic)),
   });

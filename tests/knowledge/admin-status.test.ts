@@ -26,6 +26,7 @@ test("管理员状态只汇总数量和短版本，不返回笔记正文", () =>
   const snapshot: KnowledgeSnapshot = {
     version: "a".repeat(40),
     generatedAt: "2026-09-10T12:00:00.000Z",
+    categories: ["programming"],
     notes: [
       note("public", "public", "published"),
       note("private", "private", "published"),
@@ -47,6 +48,7 @@ test("管理员诊断只保留相对路径与固定错误说明", () => {
   const snapshot: KnowledgeSnapshot = {
     version: "b".repeat(40),
     generatedAt: "2026-09-10T12:00:00.000Z",
+    categories: [],
     notes: [],
     diagnostics: [
       {

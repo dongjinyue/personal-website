@@ -83,6 +83,7 @@ export async function readKnowledgeAdminStatus(
     snapshot ?? {
       version: "",
       generatedAt: new Date().toISOString(),
+      categories: [],
       notes: [],
       diagnostics: [],
     },

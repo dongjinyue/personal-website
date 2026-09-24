@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser, isAdmin } from "@/lib/auth/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { collectLatestNews, type CollectedNewsArticle } from "@/ops/news-collector/collect-news.mjs";
+import { persistNewArticles } from "@/ops/news-collector/news-workflow.mjs";
 
 async function checkNewsWriter() {
   try {
@@ -20,6 +22,73 @@ function invalidateNews() {
   revalidatePath("/news");
   revalidatePath("/admin");
   revalidatePath("/admin/news");
+}
+
+/** 首页手动采集：先验证管理员身份，再只插入 RSS 中尚不存在的来源链接。 */
+export async function refreshAiNewsNow(): Promise<{ ok: boolean; inserted: number; message: string }> {
+  const denied = await checkNewsWriter();
+  if (denied) {
+    const message = denied.startsWith("登录已失效")
+      ? "请先使用管理员账号登录，再获取新闻。"
+      : denied;
+    return { ok: false, inserted: 0, message };
+  }
+
+  try {
+    const candidates: CollectedNewsArticle[] = await collectLatestNews();
+    const supabase = await createSupabaseServerClient(true);
+    let failedWrites = 0;
+    const result = await persistNewArticles(
+      candidates,
+      async (sourceUrls) => {
+        const { data, error } = await supabase
+          .from("news_articles")
+          .select("source_url")
+          .in("source_url", sourceUrls);
+        if (error) throw error;
+        return (data ?? []).map((row) => row.source_url).filter((url): url is string => Boolean(url));
+      },
+      async (newArticles) => {
+        let inserted = 0;
+        for (const article of newArticles) {
+          const { error } = await supabase.from("news_articles").insert({
+            title: article.title,
+            title_zh: article.title_zh || null,
+            source_url: article.source_url,
+            source_name: article.source_name,
+            description: article.description,
+            description_zh: article.description_zh || null,
+            detail: null,
+            category: article.category,
+            is_public: true,
+            hide_from_guests: false,
+            published_at: article.published_at,
+          });
+          // 并发采集时另一请求可能先插入同一链接；唯一索引会安全拦下重复项。
+          if (error?.code === "23505") continue;
+          if (error) {
+            failedWrites++;
+            continue;
+          }
+          inserted++;
+        }
+        return inserted;
+      },
+    );
+
+    if (result.inserted > 0) invalidateNews();
+    if (failedWrites > 0 && result.inserted === 0) {
+      return { ok: false, inserted: 0, message: "新闻源已读取，但部分内容没有写入；请稍后重试或在后台核对。" };
+    }
+    if (failedWrites > 0) {
+      return { ok: true, inserted: result.inserted, message: `已新增 ${result.inserted} 条；另有 ${failedWrites} 条写入失败。` };
+    }
+    return result.inserted > 0
+      ? { ok: true, inserted: result.inserted, message: `已获取最新新闻，新增 ${result.inserted} 条。` }
+      : { ok: true, inserted: 0, message: "没有发现新新闻，原有列表保持不变。" };
+  } catch {
+    return { ok: false, inserted: 0, message: "暂时无法获取新闻，请稍后重试。" };
+  }
 }
 
 function validVersion(version: string) {

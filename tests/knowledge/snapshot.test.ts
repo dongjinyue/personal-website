@@ -84,6 +84,16 @@ test("同一提交复用快照，提交变化后原子替换", async () => {
   assert.deepEqual(third.notes.map((note) => note.slug), ["b", "a"]);
 });
 
+test("知识库快照保留已建分类目录，即使目录里暂时没有笔记", async () => {
+  const source = new MemorySource();
+  source.files.set("notes/frontend/.gitkeep", Buffer.from(""));
+  source.files.set("notes/backend/api.md", Buffer.from(validNote("api")));
+
+  const snapshot = await createKnowledgeSnapshotStore(source).getSnapshot();
+
+  assert.deepEqual(snapshot.categories, ["backend", "frontend"]);
+});
+
 test("重复 slug 的所有笔记都被排除并逐路径报告", async () => {
   const source = new MemorySource();
   source.files.set("notes/ai/first.md", Buffer.from(validNote("same", "第一篇")));

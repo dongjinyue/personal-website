@@ -15,6 +15,17 @@ export type KnowledgeDetail = KnowledgeNoteSource & {
 /** 服务端权限层只区分公开游客与经 Auth 服务确认的管理员。 */
 export type KnowledgeViewer = { role: "guest" } | { role: "admin"; userId: string };
 
+export type KnowledgeNavigationNote = Pick<
+  KnowledgeNoteSource,
+  "slug" | "title" | "category" | "updatedAt"
+>;
+
+export type KnowledgeNavigationGroup = {
+  category: string;
+  count: number;
+  notes: KnowledgeNavigationNote[];
+};
+
 /** 知识库的唯一可读性判断，避免列表、详情和附件出现不一致的权限分支。 */
 export function canReadKnowledgeNote(
   note: KnowledgeNoteSource,
@@ -29,6 +40,51 @@ export function filterVisibleNotes(
   viewer: KnowledgeViewer,
 ): KnowledgeNoteSource[] {
   return notes.filter((note) => canReadKnowledgeNote(note, viewer));
+}
+
+/** 导航只携带少量可见笔记的索引字段，不把 Markdown 正文送入客户端。 */
+export function selectKnowledgeNavigationNotes(
+  notes: readonly KnowledgeNoteSource[],
+  viewer: KnowledgeViewer,
+  limit = 6,
+): KnowledgeNavigationNote[] {
+  return filterVisibleNotes(notes, viewer)
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.slug.localeCompare(right.slug))
+    .slice(0, Math.max(0, limit))
+    .map(({ slug, title, category, updatedAt }) => ({ slug, title, category, updatedAt }));
+}
+
+/** 菜单按分类分组；访客分类仅从其可见笔记推导，管理员可看到空目录。 */
+export function selectKnowledgeNavigationGroups(
+  notes: readonly KnowledgeNoteSource[],
+  availableCategories: readonly string[],
+  viewer: KnowledgeViewer,
+  notesPerCategory = 3,
+): KnowledgeNavigationGroup[] {
+  const visibleNotes = filterVisibleNotes(notes, viewer);
+  const categories = viewer.role === "admin"
+    ? new Set([...availableCategories, ...visibleNotes.map((note) => note.category)])
+    : new Set(visibleNotes.map((note) => note.category));
+
+  return [...categories]
+    .sort((left, right) => left.localeCompare(right, "zh-Hans-CN"))
+    .map((category) => {
+      const categoryNotes = visibleNotes
+        .filter((note) => note.category === category)
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.slug.localeCompare(right.slug));
+      return {
+        category,
+        count: categoryNotes.length,
+        notes: categoryNotes
+          .slice(0, Math.max(0, notesPerCategory))
+          .map(({ slug, title, category: noteCategory, updatedAt }) => ({
+            slug,
+            title,
+            category: noteCategory,
+            updatedAt,
+          })),
+      };
+    });
 }
 
 function toRelationItem(note: KnowledgeNoteSource): KnowledgeRelationItem {

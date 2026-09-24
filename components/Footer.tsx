@@ -6,6 +6,15 @@ export default function Footer() {
       <div className={styles.inner}>
         <p>© 2026 MY SPACE</p>
         <p>记录 AI 新变化 · 持续学习，持续构建。</p>
+        <p>
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            豫ICP备2026046984号-1
+          </a>
+        </p>
       </div>
     </footer>
   );

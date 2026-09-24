@@ -15,9 +15,14 @@
 .columns { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; margin-top: 16px; align-items: start; }
 .feed, .sideCard { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
 .feed { padding: 20px; min-width: 0; }
+.newsHeading { display: grid; gap: 6px; }
 .heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .heading h1 { margin: 0; font-size: 20px; font-weight: 750; }
 .heading > span { font-size: 10px; padding: 4px 7px; color: var(--accent); border-radius: 4px; background: var(--accent-soft); }
+.refreshNews { margin-left: auto; min-height: 36px; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: #fff; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+.refreshNews:hover:not(:disabled) { opacity: .9; }
+.refreshNews:disabled { opacity: .65; cursor: wait; }
+.refreshStatus { min-height: 18px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .filters { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
 .filters button, .filterLink { min-height: 34px; padding: 5px 14px; font-size: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); cursor: pointer; color: var(--foreground); text-decoration: none; display: inline-flex; align-items: center; }
 .filters button[aria-pressed="true"], .filterLink[aria-pressed="true"] { color: white; border-color: var(--accent); background: var(--accent); }
@@ -98,6 +103,7 @@
   .sidebar { grid-template-columns: 1fr; }
   .filters { gap: 7px; }
   .filters button { min-height: 40px; padding: 5px 10px; }
+  .refreshNews { margin-left: 0; min-height: 44px; }
 }
 .state { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
 

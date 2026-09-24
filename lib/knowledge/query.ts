@@ -88,6 +88,7 @@ function findHighlights(note: KnowledgeNoteSource, query: string): Array<{ text:
 export function queryKnowledge(
   visibleNotes: readonly KnowledgeNoteSource[],
   query: KnowledgeQuery,
+  availableCategories: readonly string[] = [],
 ): KnowledgeQueryResult {
   const q = normalizeSearchText(query.q);
   const textMatches = q
@@ -102,7 +103,13 @@ export function queryKnowledge(
       })
     : [...visibleNotes];
 
-  const categories = countValues(textMatches.map((note) => note.category));
+  const categoryCounts = new Map(availableCategories.map((name) => [name, 0]));
+  for (const note of textMatches) {
+    categoryCounts.set(note.category, (categoryCounts.get(note.category) ?? 0) + 1);
+  }
+  const categories = [...categoryCounts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((left, right) => left.name.localeCompare(right.name, "zh-Hans-CN"));
   const tags = countValues(textMatches.flatMap((note) => note.tags));
   const category = categories.some((item) => item.name === query.category) ? query.category : "";
   const tag = tags.some((item) => item.name === query.tag) ? query.tag : "";

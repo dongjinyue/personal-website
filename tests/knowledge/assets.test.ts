@@ -12,6 +12,7 @@ const admin: KnowledgeViewer = { role: "admin", userId: "admin-user" };
 const snapshot: KnowledgeSnapshot = {
   version: "a".repeat(40),
   generatedAt: "2026-09-10T00:00:00.000Z",
+  categories: ["ai"],
   notes: [{ path: "notes/ai/private-note.md", title: "私密笔记", slug: "private-note", visibility: "private", status: "published", tags: [], category: "ai", createdAt: "2026-09-01", updatedAt: "2026-09-10", description: null, markdown: "![[secret.png]]" }],
   diagnostics: [],
 };

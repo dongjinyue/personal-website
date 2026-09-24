@@ -59,6 +59,20 @@ test("按权限过滤后搜索、筛选、排序并生成摘要和高亮", () =>
   assert.deepEqual(result.tags, [{ name: "React", count: 1 }]);
 });
 
+test("搜索时仍显示已建分类，并将没有匹配内容的分类计数设为零", () => {
+  const result = queryKnowledge(
+    [note("frontend-note", { category: "前端", markdown: "React 页面" })],
+    parseKnowledgeQuery({ q: "React" }),
+    ["前端", "后端", "数据库"],
+  );
+
+  assert.deepEqual(result.categories, [
+    { name: "后端", count: 0 },
+    { name: "前端", count: 1 },
+    { name: "数据库", count: 0 },
+  ]);
+});
+
 test("规范化非法页码、夹取越界页码并忽略未知筛选", () => {
   const notes = Array.from({ length: 13 }, (_, index) =>
     note(`note-${index}`, {

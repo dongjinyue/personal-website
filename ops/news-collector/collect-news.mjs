@@ -2,17 +2,11 @@
 // AI 新闻定时采集脚本：从 RSS/Atom 源拉取元数据，按标题关键词分类，去重后写入 Supabase。
 // 由 systemd timer 每 6 小时运行一次；使用 service_role 密钥绕过 RLS 直接写入。
 // 支持 --dry-run 参数：只采集解析分类，不写入数据库，用于本地验证。
-
-const DRY_RUN = process.argv.includes("--dry-run");
+import { pathToFileURL } from "node:url";
+import { persistNewArticles } from "./news-workflow.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!DRY_RUN && (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY)) {
-  console.error("缺少 SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY 环境变量。");
-  console.error("如需本地验证采集逻辑（不写库），请使用 --dry-run 参数。");
-  process.exit(1);
-}
 
 // 中英文 AI 新闻 RSS/Atom 源
 const RSS_SOURCES = [
@@ -172,16 +166,16 @@ function decodeHtmlEntities(text) {
     .replace(/&nbsp;/g, " ");
 }
 
-function isRecent(dateStr) {
+function isRecent(dateStr, now = Date.now()) {
   if (!dateStr) return true; // 没有日期的条目不按时间过滤。
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return true;
-  const cutoff = Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  const cutoff = now - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
   return date.getTime() >= cutoff;
 }
 
 // MyMemory 翻译 API：免费无需 key，本地网络可达，每日 5000 词额度。
-async function translateText(text, sourceLang) {
+async function translateText(text, sourceLang, fetchImpl = fetch) {
   if (!text || sourceLang !== "en") return null;
   try {
     // MyMemory 单次请求限制 500 字节，超长文本截断。
@@ -189,7 +183,7 @@ async function translateText(text, sourceLang) {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncated)}&langpair=en|zh-CN`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(url, {
+    const res = await fetchImpl(url, {
       signal: controller.signal,
       headers: { "User-Agent": "Mozilla/5.0" },
     });
@@ -210,13 +204,13 @@ async function translateText(text, sourceLang) {
 }
 
 // 批量翻译英文文章的标题和摘要；中文源跳过。
-async function translateArticles(articles) {
+async function translateArticles(articles, fetchImpl = fetch) {
   let translated = 0;
   for (const article of articles) {
     if (article._source_lang !== "en") continue;
     const [titleZh, descZh] = await Promise.all([
-      translateText(article.title, "en"),
-      translateText(article.description, "en"),
+      translateText(article.title, "en", fetchImpl),
+      translateText(article.description, "en", fetchImpl),
     ]);
     if (titleZh) { article.title_zh = titleZh; translated++; }
     if (descZh) article.description_zh = descZh;
@@ -224,112 +218,131 @@ async function translateArticles(articles) {
   return translated;
 }
 
-async function fetchRSS(source) {
+async function fetchRSS(source, fetchImpl = fetch, log = console.error, onSuccess = () => {}) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(source.url, {
+    const response = await fetchImpl(source.url, {
       signal: controller.signal,
       headers: { "User-Agent": "MY-SPACE-News-Collector/1.0" },
     });
     clearTimeout(timeout);
     if (!response.ok) {
-      console.error(`[WARNING] ${source.name} 返回 ${response.status}`);
+      log(`[WARNING] ${source.name} 返回 ${response.status}`);
       return [];
     }
+    onSuccess();
     const text = await response.text();
     return parseFeed(text, source);
   } catch (err) {
-    console.error(`[WARNING] 获取 ${source.name} 失败: ${err.message}`);
+    log(`[WARNING] 获取 ${source.name} 失败: ${err.message}`);
     return [];
   }
 }
 
-async function insertArticles(articles) {
-  let inserted = 0;
-  for (const article of articles) {
-    try {
-      // 按 source_url 去重：已存在则跳过。
-      const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/news_articles?source_url=eq.${encodeURIComponent(article.source_url)}&select=id`, {
-        headers: {
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-      });
-      const existing = await checkRes.json();
-      if (Array.isArray(existing) && existing.length > 0) continue;
+/** 从公开 RSS/Atom 源收集、过滤并翻译近期新闻；网站按钮和定时脚本共用此入口。 */
+export async function collectLatestNews({ fetchImpl = fetch, now = Date.now(), translate = translateArticles, log = console.log } = {}) {
+  let successfulSources = 0;
+  const sourceResults = await Promise.all(
+    RSS_SOURCES.map((source) => fetchRSS(source, fetchImpl, log, () => { successfulSources++; })),
+  );
+  if (successfulSources === 0) throw new Error("新闻源暂时都无法访问。");
+  let allArticles = sourceResults.flat().filter((article) => isRecent(article.published_at, now));
 
-      const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/news_articles`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({
-          title: article.title,
-          title_zh: article.title_zh || null,
-          source_url: article.source_url,
-          source_name: article.source_name,
-          description: article.description,
-          description_zh: article.description_zh || null,
-          detail: null,
-          category: article.category,
-          is_public: true,
-          hide_from_guests: false,
-          published_at: article.published_at,
-        }),
-      });
-      if (insertRes.ok) inserted++;
-      else console.error(`[WARNING] 写入失败: ${article.title.slice(0, 40)}`);
-    } catch (err) {
-      console.error(`[WARNING] 处理条目失败: ${err.message}`);
-    }
-  }
-  return inserted;
-}
-
-async function main() {
-  console.log(`[INFO] 采集开始 ${new Date().toISOString()}${DRY_RUN ? " (DRY RUN)" : ""}`);
-
-  let allArticles = [];
-  for (const source of RSS_SOURCES) {
-    const items = await fetchRSS(source);
-    console.log(`[INFO] ${source.name}: 获取 ${items.length} 条`);
-    allArticles.push(...items);
-  }
-
-  // 过滤过期新闻。
-  const beforeFilter = allArticles.length;
-  allArticles = allArticles.filter((a) => isRecent(a.published_at));
-  console.log(`[INFO] 7天过滤: ${beforeFilter} -> ${allArticles.length} 条`);
-
-  // 按 source_url 去重（同一新闻可能出现在多个源）。
   const seen = new Set();
-  allArticles = allArticles.filter((a) => {
-    if (!a.source_url || seen.has(a.source_url)) return false;
-    seen.add(a.source_url);
+  allArticles = allArticles.filter((article) => {
+    if (!article.source_url || seen.has(article.source_url)) return false;
+    seen.add(article.source_url);
     return true;
   });
 
-  // 按发布时间倒序排列，取最近的 MAX_ARTICLES_PER_RUN 条。
   allArticles.sort((a, b) => {
-    const ta = a.published_at ? new Date(a.published_at).getTime() : 0;
-    const tb = b.published_at ? new Date(b.published_at).getTime() : 0;
-    return tb - ta;
+    const timeA = a.published_at ? new Date(a.published_at).getTime() : 0;
+    const timeB = b.published_at ? new Date(b.published_at).getTime() : 0;
+    return timeB - timeA;
   });
   allArticles = allArticles.slice(0, MAX_ARTICLES_PER_RUN);
+  await translate(allArticles, fetchImpl);
+  return allArticles;
+}
+
+async function insertArticles(articles) {
+  let inserted = 0;
+  const result = await persistNewArticles(
+    articles,
+    async (sourceUrls) => {
+      // 一次查询整批来源链接，避免逐条请求 Supabase。
+      const url = new URL("/rest/v1/news_articles", SUPABASE_URL);
+      url.searchParams.set("source_url", `in.(${sourceUrls.map((value) => `"${value.replaceAll('"', '\\"')}"`).join(",")})`);
+      url.searchParams.set("select", "source_url");
+      const checkRes = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      });
+      if (!checkRes.ok) throw new Error(`读取已有新闻失败: ${checkRes.status}`);
+      const existing = await checkRes.json();
+      return Array.isArray(existing) ? existing.map((row) => row.source_url).filter(Boolean) : [];
+    },
+    async (newArticles) => {
+      for (const article of newArticles) {
+        try {
+          const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/news_articles`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal",
+            },
+            body: JSON.stringify({
+              title: article.title,
+              title_zh: article.title_zh || null,
+              source_url: article.source_url,
+              source_name: article.source_name,
+              description: article.description,
+              description_zh: article.description_zh || null,
+              detail: null,
+              category: article.category,
+              is_public: true,
+              hide_from_guests: false,
+              published_at: article.published_at,
+            }),
+          });
+          if (insertRes.ok) inserted++;
+          else console.error(`[WARNING] 写入失败: ${article.title.slice(0, 40)}`);
+        } catch (err) {
+          console.error(`[WARNING] 处理条目失败: ${err.message}`);
+        }
+      }
+      return inserted;
+    },
+  );
+
+  return result.inserted;
+}
+
+async function main() {
+  const dryRun = process.argv.includes("--dry-run");
+  if (!dryRun && (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY)) {
+    console.error("缺少 SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY 环境变量。");
+    console.error("如需本地验证采集逻辑（不写库），请使用 --dry-run 参数。");
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`[INFO] 采集开始 ${new Date().toISOString()}${dryRun ? " (DRY RUN)" : ""}`);
+
+  const allArticles = await collectLatestNews({ log: console.log });
 
   console.log(`[INFO] 去重和过滤后共 ${allArticles.length} 条候选`);
 
   // 翻译英文新闻的标题和摘要。
-  if (!DRY_RUN || true) {
-    const translated = await translateArticles(allArticles);
-    console.log(`[INFO] 翻译完成: ${translated} 条英文新闻已生成中文标题`);
-  }
+  const translated = allArticles.filter((article) => article.title_zh).length;
+  console.log(`[INFO] 翻译完成: ${translated} 条英文新闻已生成中文标题`);
 
-  if (DRY_RUN) {
+  if (dryRun) {
     console.log("\n--- 采集结果预览 ---");
     for (const a of allArticles) {
       console.log(`[${a.category}] ${a.source_name} | ${a.title.slice(0, 60)}`);
@@ -357,7 +370,9 @@ async function main() {
   console.log(`[INFO] 新写入 ${inserted} 条，采集结束`);
 }
 
-main().catch((err) => {
-  console.error(`[ERROR] 采集脚本异常退出: ${err.message}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(`[ERROR] 采集脚本异常退出: ${err.message}`);
+    process.exitCode = 1;
+  });
+}

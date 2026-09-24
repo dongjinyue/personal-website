@@ -60,6 +60,9 @@
 .navItem:has(> a:focus-visible) .dropdown,
 .dropdown:focus-within { display: grid; }
 
+/* SPA 跳转后鼠标常留在原位；显式压住 hover/focus 展开，直到用户离开或重新聚焦导航。 */
+.navItem[data-dropdown-dismissed="true"] .dropdown { display: none !important; }
+
 .dropdown p {
   margin: 0;
   padding: 0.65rem 0.75rem;
@@ -96,6 +99,16 @@
 .projectDropdown {
   width: 19rem;
 }
+
+.knowledgeMegaDropdown {
+  right: 0;
+  width: var(--knowledge-menu-width, min(18rem, calc(100vw - 3rem)));
+  max-width: min(52rem, calc(100vw - 3rem));
+  max-height: min(72vh, 42rem);
+  overflow-y: auto;
+}
+
+.knowledgeMegaDropdown .megaGrid { grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); }
 
 .megaGrid {
   display: grid;
@@ -224,13 +237,24 @@
     box-shadow: 0 12px 32px rgb(23 32 54 / 12%);
   }
 
-  .links[data-open="true"] { display: grid; }
+  .links[data-open="true"] { display: grid; max-height: calc(100dvh - 80px); overflow-y: auto; align-content: start; }
   .links a { min-height: 44px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; border: 0; }
   .links a[aria-current="page"] { background: var(--accent-soft); }
   .menuButton { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; color: var(--foreground); border: 1px solid var(--line); border-radius: 9px; background: var(--surface); font: inherit; cursor: pointer; }
   .navItem { display: contents; }
   .dropdown { display: none !important; }
-
+  .knowledgeMegaDropdown {
+    position: static;
+    display: grid !important;
+    width: auto;
+    max-height: none;
+    margin: 0 0.25rem 0.5rem;
+    padding: 0 0.5rem 0.5rem;
+    transform: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
   .links a { font-size: 0.9rem; }
 }
 

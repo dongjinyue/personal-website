@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { refreshAiNewsNow } from "@/app/admin/news/actions";
 import { getPaginationItems, type PaginationItem } from "@/lib/pagination";
 import type { NewsArticle } from "@/lib/news-repository";
 import styles from "./NewsHome.module.css";
@@ -118,6 +119,8 @@ export default function NewsHome({ articles, expanded = false, pagination, searc
   const serverMode = pagination !== undefined;
   const currentCategory = serverMode ? (activeCategory ?? "全部") : undefined;
   const [category, setCategory] = useState("全部");
+  const [refreshPending, startRefreshTransition] = useTransition();
+  const [refreshMessage, setRefreshMessage] = useState("");
   const effectiveCategory = serverMode ? currentCategory! : category;
 
   const filtered = serverMode
@@ -130,6 +133,18 @@ export default function NewsHome({ articles, expanded = false, pagination, searc
   // 简报区展示当天日期
   const now = new Date();
   const dateStr = `${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
+
+  function refreshNews() {
+    setRefreshMessage("正在查询新闻源…");
+    startRefreshTransition(async () => {
+      try {
+        const result = await refreshAiNewsNow();
+        setRefreshMessage(result.message);
+      } catch {
+        setRefreshMessage("暂时无法获取新闻，请稍后重试。");
+      }
+    });
+  }
 
   // 分类按钮：服务端模式用 Link，首页模式用 button。
   const filterButtons = categories.map((item) => {
@@ -168,7 +183,23 @@ export default function NewsHome({ articles, expanded = false, pagination, searc
     </section>
     <div className={styles.columns}>
       <section className={styles.feed} aria-labelledby="news-title">
-        <div className={styles.heading}><h1 id="news-title">AI 新闻</h1><span>采集自公开 RSS 源</span></div>
+        <div className={styles.newsHeading}>
+          <div className={styles.heading}>
+            <h1 id="news-title">AI 新闻</h1>
+            <span>采集自公开 RSS 源</span>
+            {!expanded && !serverMode && (
+              <button
+                type="button"
+                className={styles.refreshNews}
+                onClick={refreshNews}
+                disabled={refreshPending}
+              >{refreshPending ? "正在获取…" : "管理员手动获取新闻"}</button>
+            )}
+          </div>
+          {!expanded && !serverMode && refreshMessage && (
+            <p className={styles.refreshStatus} role="status" aria-live="polite">{refreshMessage}</p>
+          )}
+        </div>
         {serverMode && (
           <NewsSearchBar initialQuery={searchQuery ?? ""} category={activeCategory ?? null} startDate={startDate ?? null} endDate={endDate ?? null} />
         )}

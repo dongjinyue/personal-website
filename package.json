@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:knowledge": "node --import tsx --conditions=react-server --test tests/knowledge/*.test.ts"
+    "test:knowledge": "node --import tsx --conditions=react-server --test tests/knowledge/*.test.ts",
+    "test:news": "node --test tests/news/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
