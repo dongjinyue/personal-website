@@ -5,8 +5,8 @@
 ## 前置条件
 
 - 腾讯云服务器已可访问
-- `personal-website` 仓库已克隆到 `/home/ubuntu/personal-website`
-- Node.js >= 18 已安装
+- `personal-website` 仓库已克隆到 `/home/ubuntu/apps/personal-website`
+- Node.js >= 18 已安装；systemd 服务使用 `/home/ubuntu/.nvm/versions/node/v24.20.0/bin/node`（Node.js 升级后需同步更新服务路径）
 - Supabase 项目已创建 `news_articles` 表（已在迁移文件中定义）
 
 ## 1. 在 Supabase 获取 service_role key
@@ -21,12 +21,11 @@
 创建环境变量文件：
 
 ```bash
-mkdir -p ~/.config
-cat > ~/.config/news-collector.env << 'EOF'
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-EOF
-chmod 600 ~/.config/news-collector.env
+sudo mkdir -p /root/.config
+sudo chmod 700 /root/.config
+sudo nano /root/.config/news-collector.env
+# 在编辑器中写入 SUPABASE_URL 和 SUPABASE_SERVICE_ROLE_KEY 两项并保存
+sudo chmod 600 /root/.config/news-collector.env
 ```
 
 将 `SUPABASE_URL` 替换为你的 Supabase 项目地址（与 `.env.local` 中的 `NEXT_PUBLIC_SUPABASE_URL` 相同），`SUPABASE_SERVICE_ROLE_KEY` 替换为上一步获取的密钥。
@@ -38,9 +37,8 @@ chmod 600 ~/.config/news-collector.env
 ## 4. 验证连通性
 
 ```bash
-cd /home/ubuntu/personal-website
-source ~/.config/news-collector.env
-node ops/news-collector/check.mjs
+cd /home/ubuntu/apps/personal-website
+sudo bash -c 'set -a; source /root/.config/news-collector.env; set +a; /home/ubuntu/.nvm/versions/node/v24.20.0/bin/node /home/ubuntu/apps/personal-website/ops/news-collector/check.mjs'
 ```
 
 预期输出：
@@ -55,8 +53,8 @@ node ops/news-collector/check.mjs
 无需配置密钥即可验证 RSS 源连通性、解析、分类和去重：
 
 ```bash
-cd /home/ubuntu/personal-website
-node ops/news-collector/collect-news.mjs --dry-run
+cd /home/ubuntu/apps/personal-website
+/home/ubuntu/.nvm/versions/node/v24.20.0/bin/node ops/news-collector/collect-news.mjs --dry-run
 ```
 
 预期输出：各源条目数、7 天过滤结果、分类统计、候选新闻预览。
@@ -64,9 +62,8 @@ node ops/news-collector/collect-news.mjs --dry-run
 ### 5b. 完整采集（写入数据库）
 
 ```bash
-cd /home/ubuntu/personal-website
-source ~/.config/news-collector.env
-node ops/news-collector/collect-news.mjs
+cd /home/ubuntu/apps/personal-website
+sudo bash -c 'set -a; source /root/.config/news-collector.env; set +a; cd /home/ubuntu/apps/personal-website && exec /home/ubuntu/.nvm/versions/node/v24.20.0/bin/node ops/news-collector/collect-news.mjs'
 ```
 
 检查 Supabase 控制台的 `news_articles` 表是否有新数据。
@@ -74,21 +71,20 @@ node ops/news-collector/collect-news.mjs
 ## 6. 安装 systemd 服务
 
 ```bash
-sudo cp ops/news-collector/news-collector.service /etc/systemd/system/
-sudo cp ops/news-collector/news-collector.timer /etc/systemd/system/
+sudo install -m 0644 ops/news-collector/news-collector.service /etc/systemd/system/news-collector.service
+sudo install -m 0644 ops/news-collector/news-collector.timer /etc/systemd/system/news-collector.timer
 sudo systemctl daemon-reload
-sudo systemctl enable news-collector.timer
-sudo systemctl start news-collector.timer
+sudo systemctl enable --now news-collector.timer
 ```
 
 ## 7. 验证定时任务
 
 ```bash
 # 查看定时器状态
-systemctl status news-collector.timer
+systemctl status news-collector.timer --no-pager
 
 # 查看下次运行时间
-systemctl list-timers news-collector.timer
+systemctl list-timers news-collector.timer --no-pager
 
 # 手动触发一次
 sudo systemctl start news-collector.service
@@ -99,7 +95,7 @@ journalctl -u news-collector.service -n 50 --no-pager
 
 ## 8. 安全说明
 
-- `news-collector.env` 文件权限为 `600`，仅 ubuntu 用户可读
+- `news-collector.env` 文件保存在 `/root/.config/`，权限为 `600`，仅 root 用户可读；systemd 读取后以 ubuntu 用户运行采集进程
 - service_role key 只配置在服务器上，不写入代码仓库
 - systemd 服务使用 `ProtectSystem=strict` 和 `ProtectHome=read-only` 限制文件系统访问
 - 采集脚本只写入 `news_articles` 表，不修改其他表
