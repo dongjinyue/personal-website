@@ -37,6 +37,44 @@ updated_at: 2026-09-10
   }
 });
 
+test("从嵌套目录生成可读的二级分类名称", () => {
+  const result = parseKnowledgeNote(
+    "notes/ai/基础/llm-foundations.md",
+    `---
+title: 大模型基础
+slug: llm-foundations
+visibility: public
+status: published
+tags: [基础原理]
+created_at: 2026-09-01
+updated_at: 2026-09-10
+---
+正文`,
+  );
+
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.note.category, "AI · 基础");
+});
+
+test("非 AI 知识库保留一级主题分类，不被内部子目录拆分", () => {
+  const result = parseKnowledgeNote(
+    "notes/programming/python/basics.md",
+    `---
+title: Python 基础
+slug: python-basics
+visibility: public
+status: published
+tags: [编程]
+created_at: 2026-09-01
+updated_at: 2026-09-10
+---
+正文`,
+  );
+
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.note.category, "programming");
+});
+
 test("将 YAML 日期统一为 YYYY-MM-DD", () => {
   const result = parseKnowledgeNote(
     "notes/ai/date.md",

@@ -45,6 +45,23 @@ test("知识库查询规范化空白并保留合法筛选", () => {
   );
 });
 
+test("嵌套 AI 分类名称可安全写入并从知识库 URL 还原", () => {
+  const url = buildKnowledgeUrl({
+    q: "",
+    category: "AI · 面试",
+    tag: "",
+    sort: "updated-desc",
+    page: 1,
+  });
+
+  assert.equal(url, "/knowledge?category=AI+%C2%B7+%E9%9D%A2%E8%AF%95");
+  assert.equal(
+    parseKnowledgeQuery({ category: new URLSearchParams(url.split("?")[1]).get("category") ?? "" })
+      .category,
+    "AI · 面试",
+  );
+});
+
 test("原始 URL 重建保留重复和未知参数供规范跳转判断", () => {
   assert.equal(
     buildRawKnowledgeUrl({ q: ["React", "Vue"], debug: "1" }),

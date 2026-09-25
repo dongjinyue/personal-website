@@ -1,4 +1,5 @@
 import { parseKnowledgeNote } from "./frontmatter";
+import { categoriesFromPaths } from "./category";
 import { GitKnowledgeSource } from "./git-source";
 import type { KnowledgeDiagnostic, KnowledgeNoteSource } from "./types";
 
@@ -12,7 +13,7 @@ export type KnowledgeSource = {
 export type KnowledgeSnapshot = {
   version: string;
   generatedAt: string;
-  /** Git 中 notes 下的一级目录，包含用 .gitkeep 保留的空分类。 */
+  /** Git 中 notes 下的目录分类；嵌套目录显示为主类与子类，包含空分类。 */
   categories: readonly string[];
   notes: readonly KnowledgeNoteSource[];
   diagnostics: readonly KnowledgeDiagnostic[];
@@ -108,11 +109,8 @@ async function buildSnapshot(
   const trackedPaths = (await source.listFiles(commit, "notes"))
     .filter((filePath) => filePath.startsWith("notes/"))
     .sort();
-  // 使用被 Git 跟踪的文件路径发现分类；.gitkeep 使空目录也能作为分类保存。
-  const categories = [...new Set(trackedPaths.flatMap((filePath) => {
-    const segments = filePath.split("/");
-    return segments.length > 2 && segments[1] !== ".gitkeep" ? [segments[1]] : [];
-  }))].sort((left, right) => left.localeCompare(right, "zh-Hans-CN"));
+  // 分类来自笔记所在目录；父目录只用于收纳子分类时不单独占一个空入口。
+  const categories = categoriesFromPaths(trackedPaths);
   const files = trackedPaths.filter((filePath) => filePath.endsWith(".md"));
   const parsed = await mapWithConcurrency(
     files,

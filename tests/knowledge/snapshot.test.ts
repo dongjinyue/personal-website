@@ -94,6 +94,19 @@ test("知识库快照保留已建分类目录，即使目录里暂时没有笔�
   assert.deepEqual(snapshot.categories, ["backend", "frontend"]);
 });
 
+test("嵌套分类展示 AI 子目录并隐藏只用于容纳子目录的父分类", async () => {
+  const source = new MemorySource();
+  source.files.set("notes/ai/.gitkeep", Buffer.from(""));
+  source.files.set("notes/ai/基础/foundations.md", Buffer.from(validNote("foundations")));
+  source.files.set("notes/ai/面试/interview.md", Buffer.from(validNote("interview")));
+  source.files.set("notes/ai/面试/.gitkeep", Buffer.from(""));
+  source.files.set("notes/projects/.gitkeep", Buffer.from(""));
+
+  const snapshot = await createKnowledgeSnapshotStore(source).getSnapshot();
+
+  assert.deepEqual(snapshot.categories, ["AI · 基础", "AI · 面试", "projects"]);
+});
+
 test("重复 slug 的所有笔记都被排除并逐路径报告", async () => {
   const source = new MemorySource();
   source.files.set("notes/ai/first.md", Buffer.from(validNote("same", "第一篇")));

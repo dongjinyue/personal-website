@@ -1,6 +1,7 @@
 import matter from "gray-matter";
 import * as yaml from "js-yaml";
 
+import { categoryFromPath } from "./category";
 import type {
   KnowledgeDiagnostic,
   KnowledgeNoteSource,
@@ -55,13 +56,6 @@ function normalizeDate(value: unknown): string | null {
 
   // Date 会自动进位无效日期，例如 2026-02-30；应在解析时明确拒绝它。
   return inputDate === normalized ? normalized : null;
-}
-
-function categoryFromPath(path: string): string {
-  const segments = path.split(/[\\/]+/).filter(Boolean);
-  const notesIndex = segments.indexOf("notes");
-
-  return notesIndex >= 0 ? (segments[notesIndex + 1] ?? "") : (segments[0] ?? "");
 }
 
 /**
