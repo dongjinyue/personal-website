@@ -47,5 +47,8 @@ test("部署工作流读取所需机密并严格验证 SSH 主机", () => {
 
   assert.match(workflow, /StrictHostKeyChecking=yes/);
   assert.doesNotMatch(workflow, /StrictHostKeyChecking=no|ssh-keyscan/);
-  assert.match(workflow, /bash -s -- \/home\/ubuntu\/apps\/personal-website/);
+  assert.match(workflow, /fetch-depth:\s*0/);
+  assert.match(workflow, /git bundle create .*refs\/remotes\/origin\/main/);
+  assert.match(workflow, /cat "\$bundle_file" \| ssh/);
+  assert.doesNotMatch(workflow, /< ops\/deploy\/deploy-remote\.sh/);
 });

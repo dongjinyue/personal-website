@@ -79,7 +79,13 @@ ssh-keygen -t ed25519 -C "GitHub Actions personal website" -f "$env:USERPROFILE\
 Get-Content "$env:USERPROFILE\.ssh\personal-website-deploy.pub"
 ```
 
-将输出的**完整单行公钥**通过现有安全 SSH 登录添加到服务器 `/home/ubuntu/.ssh/authorized_keys` 末尾，保留其他已有行，不要覆盖该文件。确认权限：
+将输出的**完整单行公钥**通过现有安全 SSH 登录添加到服务器 `/home/ubuntu/.ssh/authorized_keys` 末尾，保留其他已有行，不要覆盖该文件。该公钥必须限制为只运行部署脚本，并拒绝转发和伪终端；格式如下（把示例公钥替换为刚生成的实际公钥）：
+
+```text
+restrict,command="bash /home/ubuntu/apps/personal-website/ops/deploy/deploy-remote.sh /home/ubuntu/apps/personal-website" ssh-ed25519 AAAA... GitHub Actions personal website
+```
+
+`restrict` 会关闭端口转发、代理转发和伪终端；`command=` 让此密钥不能获得普通 SSH Shell（命令行），只运行固定部署脚本。脚本只接受标准输入中的 Git bundle（Git 代码包），不接受 GitHub Actions 传来的任意命令。确认权限：
 
 ```bash
 chmod 700 /home/ubuntu/.ssh
@@ -115,6 +121,8 @@ ssh-keygen -lf "$env:TEMP\personal-website-known-hosts"
 只有 `ssh-keygen` 显示的指纹与上方可信指纹相同，才将该文件的一整行内容填入 `DEPLOY_KNOWN_HOSTS`。`ssh-keyscan` 只负责获取候选公钥，本身不验证公钥真假；必须比对指纹。不要把任何私钥写入普通变量、日志、工单或仓库文件。
 
 配置完成后，在 GitHub 的 **Actions → Deploy personal website → Run workflow** 手动触发一次。确认工作流显示部署提交号、服务重启完成并通过健康检查；之后每次推送到 `main` 会自动触发同一流程。并发部署会排队，不会取消正在运行的部署。
+
+部署通过 Actions Runner（工作流执行机器）创建 `main` 的完整 Git bundle，并经 SSH 标准输入传到服务器。服务器当前不能出站访问 GitHub，所以不在服务器上执行 `git fetch`；服务器只从收到的 bundle 快进到 `main`，仍会拒绝本地未提交改动和非快进更新。
 
 ## 失败排查与回退
 

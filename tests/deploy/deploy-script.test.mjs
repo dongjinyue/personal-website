@@ -63,10 +63,11 @@ function createSandbox(t) {
     root,
     bin,
     log,
-    run(script, args = [], extraEnv = {}) {
+    run(script, args = [], extraEnv = {}, input = "") {
       return spawnSync(bashExecutable, [script, ...args], {
         cwd: root,
         encoding: "utf8",
+        input,
         env: {
           ...process.env,
           PATH: `${bin}${path.delimiter}${process.env.PATH ?? ""}`,
@@ -163,7 +164,7 @@ function installRemoteFixtures(sandbox) {
       "case \"$*\" in",
       "  'status --porcelain --untracked-files=all') [[ \"${FAKE_DIRTY:-0}\" != 1 ]] || printf ' M tracked-file\\n' ;;",
       "  'branch --show-current') printf '%s\\n' \"${FAKE_BRANCH:-main}\" ;;",
-      "  'fetch --quiet origin main'|'pull --ff-only origin main') exit 0 ;;",
+      "  'bundle verify '*|'fetch --quiet '*|'merge --ff-only refs/remotes/origin/main') exit 0 ;;",
       "  'rev-parse --short HEAD') printf 'deadbeef\\n' ;;",
       "  *) exit 64 ;;",
       "esac",
@@ -196,13 +197,24 @@ test("deploy-remote.sh 不在 main 分支时不发布", bashOnly, (t) => {
   assert.equal(events.includes("deploy"), false);
 });
 
-test("deploy-remote.sh 先快进 main 再执行发布脚本", bashOnly, (t) => {
+test("deploy-remote.sh 从标准输入读取 Git bundle 并快进 main 后发布", bashOnly, (t) => {
   const sandbox = createSandbox(t);
   const { repo, remoteScript } = installRemoteFixtures(sandbox);
-  const result = sandbox.run(remoteScript, [repo]);
+  const result = sandbox.run(remoteScript, [repo], {}, "test bundle data");
   const events = sandbox.events();
 
   assert.equal(result.status, 0, result.stderr);
-  assert.ok(events.indexOf("git fetch --quiet origin main") < events.indexOf("git pull --ff-only origin main"));
-  assert.ok(events.indexOf("git pull --ff-only origin main") < events.indexOf("deploy"));
+  assert.ok(events.some((event) => event.startsWith("git bundle verify ")));
+  assert.ok(events.some((event) => event.startsWith("git fetch --quiet ")));
+  assert.ok(events.indexOf("git merge --ff-only refs/remotes/origin/main") < events.indexOf("deploy"));
+  assert.equal(events.some((event) => event.includes("origin main")), false);
+});
+
+test("deploy-remote.sh 不接受空的 bundle 输入", bashOnly, (t) => {
+  const sandbox = createSandbox(t);
+  const { repo, remoteScript } = installRemoteFixtures(sandbox);
+  const result = sandbox.run(remoteScript, [repo]);
+
+  assert.notEqual(result.status, 0);
+  assert.equal(sandbox.events().some((event) => event === "deploy"), false);
 });

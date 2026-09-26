@@ -24,7 +24,7 @@
 
 1. `.github/workflows/deploy.yml` 在 `main` 收到推送时触发，并提供 `workflow_dispatch` 手动重跑入口；限制并发，避免同一服务器同时发布两个版本。
 2. Workflow 使用 GitHub 仓库机密项保存服务器地址、SSH 端口、部署用户名、私钥和经过核验的 SSH 主机公钥；不得使用 `StrictHostKeyChecking=no`，不得把私钥回显到日志。
-3. Workflow 通过 SSH 在 `/home/ubuntu/apps/personal-website` 执行远程发布命令。命令先检查工作树无本地改动，再对 `main` 执行快进更新，最后调用仓库中的部署脚本；这样新脚本也会先随代码更新到服务器。
+3. Actions Runner 创建 `main` 的完整 Git bundle，通过严格校验主机身份的 SSH 标准输入传送。服务器部署专用公钥配置强制命令，只允许运行固定的 `deploy-remote.sh`；脚本先检查工作树无本地改动，再从 bundle 对 `main` 执行快进更新，最后调用仓库中的部署脚本。服务器无需出站连接 GitHub。
 4. 部署脚本串行执行 `npm ci`、`npm run build`、重启 `personal-website.service`，再对本机网站地址做 HTTP 健康检查。发布完成后记录实际部署的 Git 提交号。
 5. systemd 单元以非 root 的 `ubuntu` 用户运行生产服务；SSH 部署身份只获得重启该指定服务所需的最小权限。
 
@@ -53,3 +53,7 @@
 - 不迁移到 Vercel 或其他托管平台。
 - 不修改新闻采集频率、Obsidian 同步方式或数据库结构。
 - 本阶段不承诺跨版本原子切换或自动回滚；如需零停机/回滚，再作为单独改进设计。
+
+## 实施裁定
+
+- **裁定：代码由 Actions Runner 经 SSH bundle 传输，不由服务器连接 GitHub 拉取。** 实测服务器访问 GitHub 超时，因此原设计中的 `git fetch origin main` 无法工作；保持当前网络边界并通过已验证的 SSH 通道传递完整历史。代价是每次部署需传输本次更新所需的 Git 历史对象；若判断不适用，部署会在快进前失败，不会覆盖服务或本地文件。
