@@ -102,7 +102,7 @@ chown -R ubuntu:ubuntu /home/ubuntu/.ssh
 | `DEPLOY_HOST` | `182.254.159.50` |
 | `DEPLOY_PORT` | SSH 端口，当前使用 `22` |
 | `DEPLOY_USER` | `ubuntu` |
-| `DEPLOY_SSH_KEY` | 专用私钥 `personal-website-deploy` 的完整文件内容，包含首尾标记行 |
+| `DEPLOY_SSH_KEY_B64` | 专用私钥 `personal-website-deploy` 的原始文件字节经 Base64 编码后的单行文本，用于避免跨平台换行转换 |
 | `DEPLOY_KNOWN_HOSTS` | 服务器 SSH 主机公钥的一整行，供工作流验证连接的服务器身份 |
 
 主机密钥指纹此前已通过可信 SSH 连接核对为：

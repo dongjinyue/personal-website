@@ -5,7 +5,8 @@
 - `main` 分支推送和手动触发均可通过 SSH 自动更新腾讯云个人网站；GitHub Actions 将 `main` 打包传输，解决服务器无法出站访问 GitHub 的问题。
 - 部署专用 SSH 公钥强制运行固定部署脚本；部署时显式加载服务器 Node.js 路径，服务器拒绝脏工作树和非快进更新，构建成功后才重启网站并执行 HTTP 健康检查。
 - 部署使用单独 systemd 服务和仅允许重启该服务的 sudo 规则，不会停止共享 PM2 服务中的 QQ 转发器。
-- 代码与操作文档已准备；自动部署仍需先按 `ops/deploy/README.md` 完成服务器进程切换、专用部署密钥和 GitHub Secrets 配置。
+- 部署密钥以单行 Base64（编码文本）保存在 GitHub Secrets，工作流还原后再通过已限制用途的 SSH 密钥部署，避免 Windows 换行格式导致连接失败。
+- 自动部署仍需按 `ops/deploy/README.md` 配置服务器进程、专用密钥和其余 GitHub Secrets。
 
 ## 待发布：新闻日期筛选与采集时间展示
 
