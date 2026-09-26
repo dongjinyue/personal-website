@@ -47,6 +47,7 @@ test("部署工作流读取所需机密并严格验证 SSH 主机", () => {
 
   assert.match(workflow, /StrictHostKeyChecking=yes/);
   assert.doesNotMatch(workflow, /StrictHostKeyChecking=no|ssh-keyscan/);
+  assert.match(workflow, /tr -d '\\r'/, "SSH 私钥与 known_hosts 必须去除 Windows 回车符");
   assert.match(workflow, /fetch-depth:\s*0/);
   assert.match(workflow, /git bundle create .*refs\/remotes\/origin\/main/);
   assert.match(workflow, /cat "\$bundle_file" \| ssh/);
