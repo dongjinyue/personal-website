@@ -116,6 +116,15 @@ public/               静态资源
 - `UX-CONTRACT.md`：导航、权限、CRUD、反馈和无障碍行为约定。
 - `CHANGELOG.md`：已经完成的重要变更。
 - `AGENTS.md`：仓库内编码智能代理需要遵守的项目规则。
+- `ops/deploy/README.md`：GitHub Actions 自动部署的一次性服务器初始化、密钥配置和回滚说明。
+
+## 自动部署
+
+`.github/workflows/deploy.yml` 配置为 `main` 分支有新提交或手动触发时，通过经过主机密钥校验的 SSH（安全外壳协议）部署到腾讯云。服务器会快进拉取代码、安装锁定依赖、构建 Next.js，然后重启个人网站服务并检查本机 HTTP（网页协议）健康状态。
+
+自动部署需要先完成服务器 systemd（系统服务管理器）初始化、网站进程从 PM2（Node.js 进程管理器）安全切换，以及 GitHub Actions Secrets（加密配置项）设置。未完成这些一次性步骤前，工作流代码就绪不代表自动部署已启用；操作步骤见 [`ops/deploy/README.md`](ops/deploy/README.md)。此流程不会停止共享 PM2 的其他应用、改动 `.env.local`、新闻/Obsidian 定时任务或执行数据库迁移。构建发生在现有服务器目录，更新时可能短暂影响网页可用性。
+
+如果在 Secrets 配置前推送到 `main`，工作流会清楚报出缺少配置并停止，且不会连接或修改服务器。
 
 ## 当前限制
 
