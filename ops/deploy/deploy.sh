@@ -5,6 +5,10 @@ repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 healthcheck_url=${DEPLOY_HEALTHCHECK_URL:-http://127.0.0.1:3000/}
 healthcheck_attempts=${DEPLOY_HEALTHCHECK_ATTEMPTS:-30}
 healthcheck_interval=${DEPLOY_HEALTHCHECK_INTERVAL:-2}
+node_bin_dir=${DEPLOY_NODE_BIN_DIR:-/home/ubuntu/.nvm/versions/node/v24.20.0/bin}
+
+# SSH 非交互会话通常不会加载 NVM 初始化配置，因此显式补上服务器 Node.js 路径。
+export PATH="${PATH}:${node_bin_dir}"
 
 cd "$repo_dir"
 printf '安装锁定依赖……\n'

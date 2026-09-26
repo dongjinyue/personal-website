@@ -31,6 +31,7 @@ function createSandbox(t) {
     npm: [
       "#!/usr/bin/env bash",
       "printf 'npm %s\\n' \"$*\" >> \"$DEPLOY_TEST_LOG\"",
+      "if [[ -n \"${EXPECT_NODE_BIN:-}\" ]]; then [[ \":$PATH:\" == *\":$EXPECT_NODE_BIN:\"* ]] || exit 65; fi",
       "case \"$*\" in",
       "  ci) [[ \"${FAKE_NPM_FAIL:-}\" != ci ]] ;;",
       "  \"run build\") [[ \"${FAKE_NPM_FAIL:-}\" != build ]] ;;",
@@ -134,6 +135,25 @@ test("deploy.sh 按安装、构建、重启、健康检查顺序执行", bashOnl
   const sandbox = createSandbox(t);
   const script = installDeployScript(sandbox);
   const result = sandbox.run(script);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(sandbox.events(), [
+    "npm ci",
+    "npm run build",
+    "sudo -n systemctl restart personal-website.service",
+    "curl --fail --silent --show-error --output /dev/null http://127.0.0.1:3000/",
+  ]);
+});
+
+test("deploy.sh 为非交互 SSH 会话追加固定 Node.js 路径", bashOnly, (t) => {
+  const sandbox = createSandbox(t);
+  const script = installDeployScript(sandbox);
+  const nodeBin = path.join(sandbox.root, "node-bin");
+  mkdirSync(nodeBin);
+  const result = sandbox.run(script, [], {
+    DEPLOY_NODE_BIN_DIR: nodeBin,
+    EXPECT_NODE_BIN: nodeBin,
+  });
 
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(sandbox.events(), [

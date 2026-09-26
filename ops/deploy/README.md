@@ -124,6 +124,8 @@ ssh-keygen -lf "$env:TEMP\personal-website-known-hosts"
 
 部署通过 Actions Runner（工作流执行机器）创建 `main` 的完整 Git bundle，并经 SSH 标准输入传到服务器。服务器当前不能出站访问 GitHub，所以不在服务器上执行 `git fetch`；服务器只从收到的 bundle 快进到 `main`，仍会拒绝本地未提交改动和非快进更新。
 
+远程 SSH 是非交互会话，不会自动加载 NVM 初始化配置；部署脚本会显式将 `/home/ubuntu/.nvm/versions/node/v24.20.0/bin` 加入命令搜索路径，供 `npm ci` 和生产构建使用。
+
 ## 失败排查与回退
 
 查看网站服务状态和最近日志：
