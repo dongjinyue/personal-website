@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { refreshAiNewsNow } from "@/app/admin/news/actions";
 import { getPaginationItems, type PaginationItem } from "@/lib/pagination";
+import { formatNewsDateTime } from "@/lib/news-date-time.mjs";
 import type { NewsArticle } from "@/lib/news-repository";
 import styles from "./NewsHome.module.css";
 
@@ -207,7 +208,7 @@ export default function NewsHome({ articles, expanded = false, pagination, searc
         <p className={styles.srOnly} role="status">当前分类：{effectiveCategory}，显示 {visible.length} 条{serverMode && pagination ? `，共 ${pagination.total} 条` : ""}</p>
         <div>{visible.map((item)=><article className={styles.article} id={item.id} key={item.id}>
           <span className={styles.category}>{item.category}</span>
-          <div className={styles.copy}><h2>{item.sourceUrl ? <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{item.titleZh || item.title}</a> : (item.titleZh || item.title)}</h2><p>{item.descriptionZh || (item.description ?? "")}</p><div className={styles.meta}>{item.sourceName && <span className={styles.demo}>来源：{item.sourceName}</span>}{item.publishedAt && <span className={styles.dateLabel}>{new Date(item.publishedAt).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}</span>}</div></div>
+          <div className={styles.copy}><h2>{item.sourceUrl ? <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{item.titleZh || item.title}</a> : (item.titleZh || item.title)}</h2><p>{item.descriptionZh || (item.description ?? "")}</p><div className={styles.meta}>{item.sourceName && <span className={styles.demo}>来源：{item.sourceName}</span>}{item.publishedAt && <time className={styles.dateLabel} dateTime={item.publishedAt}>发布：{formatNewsDateTime(item.publishedAt)}</time>}<time className={styles.dateLabel} dateTime={item.collectedAt}>收录：{formatNewsDateTime(item.collectedAt)}</time></div></div>
         </article>)}</div>
         {!visible.length && <div className={styles.state}><p>{searchQuery ? `未找到与「${searchQuery}」相关的新闻。` : "暂无新闻。采集任务运行后会自动填充。"}</p></div>}
         {!expanded && articles.length > 4 && <Link className={styles.more} href="/news">查看更多新闻 <span aria-hidden="true">→</span></Link>}

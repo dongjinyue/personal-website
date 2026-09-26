@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getChinaNewsDateRange } from "@/lib/news-date-time.mjs";
 
 export const NEWS_PAGE_SIZE = 10;
 
@@ -78,7 +79,7 @@ export async function getRecentNews(limit = 4): Promise<NewsArticle[]> {
 }
 
 /** 新闻列表页按分类筛选、关键词搜索、日期范围并分页。
- *  date 为 ISO 字符串（YYYY-MM-DD），仅比较日期部分。
+ *  date 为日期选择器的 YYYY-MM-DD，按北京时间自然日筛选。
  */
 export async function getNewsPage(
   rawPage?: string,
@@ -93,12 +94,13 @@ export async function getNewsPage(
   const searchQuery = search?.trim() || undefined;
   const start = startDate?.trim() || undefined;
   const end = endDate?.trim() || undefined;
+  const { startInclusive, endExclusive } = getChinaNewsDateRange(start, end);
 
   // 单独计数，避免与已带 select 字段的 visibleQuery 链式调用冲突。
   let countQ = supabase.from("news_articles").select("id", { count: "exact", head: true }).eq("is_public", true);
   if (filter) countQ = countQ.eq("category", filter);
-  if (start) countQ = countQ.gte("published_at", `${start}T00:00:00.000Z`);
-  if (end) countQ = countQ.lte("published_at", `${end}T23:59:59.999Z`);
+  if (startInclusive) countQ = countQ.gte("published_at", startInclusive);
+  if (endExclusive) countQ = countQ.lt("published_at", endExclusive);
   if (searchQuery) countQ = countQ.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,title_zh.ilike.%${searchQuery}%,description_zh.ilike.%${searchQuery}%`);
   const counted = await countQ;
   if (counted.error || counted.count === null) throw new Error("暂时无法读取新闻数量。");
@@ -110,8 +112,8 @@ export async function getNewsPage(
 
   let query = visibleQuery(supabase);
   if (filter) query = query.eq("category", filter);
-  if (start) query = query.gte("published_at", `${start}T00:00:00.000Z`);
-  if (end) query = query.lte("published_at", `${end}T23:59:59.999Z`);
+  if (startInclusive) query = query.gte("published_at", startInclusive);
+  if (endExclusive) query = query.lt("published_at", endExclusive);
   if (searchQuery) query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,title_zh.ilike.%${searchQuery}%,description_zh.ilike.%${searchQuery}%`);
   const { data, error } = await query
     .order("published_at", { ascending: false })
