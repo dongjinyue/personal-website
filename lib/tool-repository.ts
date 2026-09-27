@@ -5,6 +5,13 @@ import type { Tool } from "@/data/tools";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+/** 从可见工具回退生成分类；允许空分类表或网络临时故障时维持页面可用。 */
+export function getCategoriesFromTools(tools: Pick<Tool, "category">[]): string[] {
+  return [...new Set(tools.map((tool) => tool.category).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b, "zh-CN"),
+  );
+}
+
 /**
  * 从 Supabase 查询全部工具及其标签。
  */
@@ -60,7 +67,18 @@ export const getPublicToolCategories = cache(async function getPublicToolCategor
     .select("name")
     .order("name", { ascending: true });
 
-  if (error) throw new Error(`读取工具分类失败：${error.message}`);
+  if (error) {
+    if (!/fetch failed|failed to fetch|network error/i.test(error.message)) {
+      throw new Error(`读取工具分类失败：${error.message}`);
+    }
+    // 分类表短暂不可达时，工具集仍可用工具记录自带的分类继续展示。
+    // getTools 使用 React.cache，同一次服务端渲染不会重复请求工具列表。
+    console.warn("读取工具分类失败，临时使用公开工具中的分类。", {
+      code: error.code,
+    });
+    const tools = await getTools();
+    return getCategoriesFromTools(tools);
+  }
   return data.map((category) => category.name);
 });
 
