@@ -84,7 +84,7 @@ export default function ProjectCard({
           )}
           {projectUrl && (
             <a className={styles.action} href={projectUrl} target="_blank" rel="noreferrer">
-              打开项目
+              在线浏览
             </a>
           )}
         </div>
