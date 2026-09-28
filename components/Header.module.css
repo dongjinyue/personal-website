@@ -1,4 +1,7 @@
 .header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
@@ -215,7 +218,6 @@
 }
 
 @media (max-width: 600px) {
-  .header { position: relative; z-index: var(--z-header); }
   .navigation {
     width: min(100% - 28px, var(--content-width));
     min-height: 64px;
