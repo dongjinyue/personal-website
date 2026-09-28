@@ -77,8 +77,8 @@ export default async function ProjectDetailPage({
               </a>
             )}
             {project.projectUrl && (
-              <a className={styles.action} href={project.projectUrl} target="_blank" rel="noreferrer">
-                打开项目
+              <a className={styles.action} href={project.projectUrl} target="_blank" rel="noopener noreferrer">
+                在线浏览：{new URL(project.projectUrl).host} ↗
               </a>
             )}
           </nav>

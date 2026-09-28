@@ -5,7 +5,7 @@ insert into public.projects (
   id, slug, name, description, long_description,
   status, cover_image, project_url, github_url, is_featured
 ) values
-  ('ai-workspace-agent', 'ai-workspace-agent', 'AI Workspace Agent', '集成知识库、RAG、Agent 和 MCP 的 AI 工作空间。', '这是一个面向个人知识管理与 AI 协作的工作空间，尝试把知识库检索、智能代理和外部工具连接在统一流程中。', 'completed', null, null, null, true),
+  ('ai-workspace-agent', 'ai-workspace-agent', 'AI Workspace Agent', '面向知识问答与 AI 协作的全栈工作空间，集成个人文档 RAG、LangGraph Agent 与真实 MCP 工具调用。', '这是一个围绕知识问答与 AI 协作构建的全栈工作空间。访客可以上传 TXT、Markdown、DOCX、PDF 文档建立仅自己可访问的个人知识库，再通过 RAG 检索相关资料；LangGraph Agent 会根据问题在知识检索、计算、任务技能和 MCP 工具之间进行有限步数的编排。系统由 React + Vite 前端、FastAPI 服务、SQLite 会话存储与 Chroma 向量库组成，并把输入校验、工具白名单、调用限额和 Docker 安全部署纳入完整流程。', 'completed', null, 'https://agent.dongjinyue.cn', null, true),
   ('personal-website', 'personal-website', 'Personal Website', '用于管理个人项目、常用工具和内容的长期数字空间。', '这是一个用于长期管理个人项目、常用工具与学习内容的网站。项目也作为我的 Next.js 和 TypeScript 学习实践。', 'building', null, null, 'https://github.com/dongjinyue/personal-website', true),
   ('learning-playground', 'learning-playground', 'Learning Playground', '用于练习前端和 AI 应用开发的实验项目。', '这是一个用于验证前端概念和 AI 应用想法的实验空间，小型练习会在这里快速实现、观察并持续整理。', 'building', null, null, null, false)
 on conflict (id) do update set
@@ -45,9 +45,11 @@ delete from public.project_highlights
 where project_id in ('ai-workspace-agent', 'personal-website', 'learning-playground');
 
 insert into public.project_highlights (project_id, content, sort_order) values
-  ('ai-workspace-agent', '使用 RAG 检索个人知识库中的相关内容', 0),
-  ('ai-workspace-agent', '通过 Agent 编排多步骤任务与工具调用', 1),
-  ('ai-workspace-agent', '使用 MCP 连接可复用的外部能力', 2),
+  ('ai-workspace-agent', 'React 19 + Vite 前端连接 FastAPI 后端；SQLite 持久化会话与执行轨迹，Chroma 保存知识向量。', 0),
+  ('ai-workspace-agent', '访客可导入 TXT、Markdown、DOCX、PDF 建立个人知识库；检索按访客身份隔离，扫描版 PDF 支持离线 OCR（最多 30 页）。', 1),
+  ('ai-workspace-agent', 'LangGraph Agent 组合知识检索、计算器、任务技能和工具注册表处理多步问题，每轮最多 5 步，并单独保存不含隐藏思维链的执行轨迹。', 2),
+  ('ai-workspace-agent', 'MCP 客户端真实执行初始化、工具发现和调用；服务端通过工具白名单控制能力，MCP 子进程不会继承模型 API 密钥。', 3),
+  ('ai-workspace-agent', '公开体验设有访客每日 10 次问答额度及 IP、上传频率和文件大小限制，并配合签名访客身份、提示词注入检测和非 root Docker 部署。', 4),
   ('personal-website', '使用 App Router 组织页面与路由', 0),
   ('personal-website', '使用 TypeScript 建立项目和工具数据模型', 1),
   ('personal-website', '通过响应式布局适配桌面与手机设备', 2),
