@@ -32,9 +32,11 @@ export default function ProjectCard({
   headingLevel = "h2",
 }: ProjectCardProps) {
   const Heading = headingLevel;
+  const hasTags = (tags?.length ?? 0) > 0;
+  const hasActions = Boolean(slug || githubUrl || projectUrl);
 
   return (
-    <article className={styles.card}>
+    <article className={`${styles.card} ${styles.projectCard}`}>
       {coverImage && (
         <div className={styles.cover}>
           <Image
@@ -62,30 +64,34 @@ export default function ProjectCard({
         </ul>
       )}
 
-      {tags && tags.length > 0 && (
-        <ul className={styles.tags} aria-label="项目标签">
-          {tags.map((tag) => (
-            <li key={tag}>{tag}</li>
-          ))}
-        </ul>
-      )}
+      {(hasTags || hasActions) && (
+        <div className={styles.projectFooter}>
+          {hasTags && (
+            <ul className={styles.tags} aria-label="项目标签">
+              {tags?.map((tag) => (
+                <li key={tag}>{tag}</li>
+              ))}
+            </ul>
+          )}
 
-      {(slug || githubUrl || projectUrl) && (
-        <div className={styles.actions}>
-          {slug && (
-            <Link className={styles.action} href={`/projects/${slug}`}>
-              查看详情
-            </Link>
-          )}
-          {githubUrl && (
-            <a className={styles.action} href={githubUrl} target="_blank" rel="noreferrer">
-              查看 GitHub
-            </a>
-          )}
-          {projectUrl && (
-            <a className={styles.action} href={projectUrl} target="_blank" rel="noreferrer">
-              在线浏览
-            </a>
+          {hasActions && (
+            <div className={styles.actions}>
+              {slug && (
+                <Link className={styles.action} href={`/projects/${slug}`}>
+                  查看详情
+                </Link>
+              )}
+              {githubUrl && (
+                <a className={styles.action} href={githubUrl} target="_blank" rel="noreferrer">
+                  查看 GitHub
+                </a>
+              )}
+              {projectUrl && (
+                <a className={styles.action} href={projectUrl} target="_blank" rel="noreferrer">
+                  在线浏览
+                </a>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -8,6 +8,25 @@
   overflow: hidden;
 }
 
+/* 项目卡片内容高度不同，将标签和操作区固定到同一网格行的底部。 */
+.projectCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.projectFooter {
+  margin-top: auto;
+}
+
+.projectFooter .tags {
+  margin-top: 22px;
+}
+
+.projectFooter .actions {
+  margin-top: 24px;
+}
+
 .toolCard {
   min-height: 236px;
   display: flex;
