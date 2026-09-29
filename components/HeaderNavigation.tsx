@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import GuardedLink from "@/components/admin/GuardedLink";
 import { transitionDismissedDropdown, type NavigationDropdownId } from "@/lib/navigation/dropdown-state";
 import type { KnowledgeNavigationGroup } from "@/lib/knowledge/repository";
@@ -13,6 +13,17 @@ const publicLinks = [
   { href: "/news", label: "AI 新闻" },
 ];
 
+function isAdminRoute(pathname: string | null) {
+  return pathname === "/admin" || pathname?.startsWith("/admin/") === true;
+}
+
+function isAuthBoundaryTransition(previousPathname: string | null, pathname: string | null) {
+  return (
+    (previousPathname === "/login" && isAdminRoute(pathname)) ||
+    (isAdminRoute(previousPathname) && pathname === "/login")
+  );
+}
+
 type Props = {
   showAdmin: boolean;
   projects: Array<{ name: string; slug: string }>;
@@ -23,8 +34,19 @@ type Props = {
 
 export default function HeaderNavigation({ showAdmin, projects, tools, categories, knowledgeGroups }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+  const previousPathname = useRef(pathname);
   const [open, setOpen] = useState(false);
   const [dismissedDropdown, setDismissedDropdown] = useState<NavigationDropdownId | null>(null);
+
+  useEffect(() => {
+    // 根布局会在客户端跳转时保留；登录或退出后主动刷新，才能让服务端重新计算顶部入口。
+    if (isAuthBoundaryTransition(previousPathname.current, pathname)) {
+      router.refresh();
+    }
+    previousPathname.current = pathname;
+  }, [pathname, router]);
+
   const handleDropdownNavigation = (dropdown: NavigationDropdownId) => () => {
     setOpen(false);
     setDismissedDropdown((current) => transitionDismissedDropdown(current, { type: "navigate", dropdown }));
