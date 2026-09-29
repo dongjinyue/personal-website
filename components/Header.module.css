@@ -95,6 +95,10 @@
   left: auto;
   right: -6rem;
   width: min(46rem, calc(100vw - 3rem));
+  max-height: min(72vh, 42rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding: 0.9rem;
   transform: none;
 }

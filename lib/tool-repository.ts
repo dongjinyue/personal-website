@@ -91,6 +91,7 @@ export async function getFavoriteTools(limit = 3): Promise<Tool[]> {
 /** 顶部导航按真实分类展示公开工具；常用工具在同一分类中优先。 */
 export async function getNavigationPublicTools() {
   const tools = await getTools();
-  return [...tools].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite) || a.name.localeCompare(b.name, "zh-CN"))
-    .slice(0, 16).map((tool) => ({ name: tool.name, url: tool.url, category: tool.category }));
+  return [...tools]
+    .sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite) || a.name.localeCompare(b.name, "zh-CN"))
+    .map((tool) => ({ name: tool.name, url: tool.url, category: tool.category }));
 }
