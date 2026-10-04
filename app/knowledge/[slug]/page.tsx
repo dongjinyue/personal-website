@@ -7,6 +7,7 @@ import KnowledgeOutline from "@/components/knowledge/KnowledgeOutline";
 import KnowledgeRelations from "@/components/knowledge/KnowledgeRelations";
 import { analyzeMarkdown } from "@/lib/knowledge/markdown";
 import { getKnowledgeNoteForCurrentUser } from "@/lib/knowledge/repository";
+import { createPageMetadata } from "@/lib/site-metadata";
 import type { KnowledgeRelations as MarkdownRelations } from "@/lib/knowledge/relations";
 import styles from "./page.module.css";
 
@@ -31,15 +32,17 @@ export async function generateMetadata({
 
   if (!note) {
     return {
-      title: "笔记未找到 | MY SPACE",
+      title: "笔记未找到",
       robots: { index: false, follow: false },
     };
   }
 
-  return {
-    title: `${note.title} | MY SPACE`,
-    description: note.description ?? `阅读知识库笔记：${note.title}`,
-  };
+  const metadata = createPageMetadata(`/knowledge/${encodeURIComponent(slug)}`, note.title, note.description ?? `阅读知识库笔记：${note.title}`);
+  // 管理员可读的草稿和私密笔记也明确禁止搜索引擎收录。
+  if (note.visibility !== "public" || note.status !== "published") {
+    metadata.robots = { index: false, follow: false };
+  }
+  return metadata;
 }
 
 /** 动态详情始终从权限感知 Repository 读取，未授权与不存在共享同一 404。 */

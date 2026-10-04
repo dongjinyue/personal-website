@@ -3,16 +3,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ProjectCard from "@/components/ProjectCard";
 import { getPublicProjectsPage } from "@/lib/project-repository";
+import { createPageMetadata, getPaginatedPath } from "@/lib/site-metadata";
 import styles from "../collection.module.css";
-
-export const metadata: Metadata = {
-  title: "项目",
-  description: "查看我正在构建、已经完成和持续打磨的项目。",
-};
 
 export const dynamic = "force-dynamic";
 
 type Props = { searchParams: Promise<{ page?: string | string[] }> };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { page } = await searchParams;
+  return createPageMetadata(getPaginatedPath("/projects", page), "项目", "查看我正在构建、已经完成和持续打磨的项目。");
+}
 
 export default async function ProjectsPage({ searchParams }: Props) {
   const query = await searchParams;

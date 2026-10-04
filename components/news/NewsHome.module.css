@@ -1,4 +1,22 @@
 .page { width: min(var(--content-width), calc(100% - 48px)); margin: 24px auto 38px; }
+.identity { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 32px; margin-bottom: 16px; padding: 28px 30px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.identityCopy { min-width: 0; }
+.identityLabel { margin: 0 0 12px; color: var(--accent); font-size: 12px; font-weight: 650; }
+.identityCopy h1 { margin: 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 750; line-height: 1.45; letter-spacing: -.7px; text-wrap: balance; }
+.identityIntro { max-width: 560px; margin: 12px 0 20px; color: var(--muted); font-size: 14px; line-height: 1.85; }
+.identityActions { display: flex; flex-wrap: wrap; gap: 10px; }
+.identityActions a { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--accent); border-radius: 7px; font-size: 13px; font-weight: 650; text-decoration: none; cursor: pointer; }
+.identityPrimary { color: var(--surface); background: var(--accent); }
+.identityPrimary:hover { background: var(--foreground); border-color: var(--foreground); }
+.identitySecondary { color: var(--accent); background: var(--surface); }
+.identitySecondary:hover { background: var(--accent-soft); }
+.identityActions a:active { box-shadow: inset 0 0 0 1px currentColor; }
+.identityFocus { align-self: center; padding-left: 24px; border-left: 1px solid var(--line); }
+.identityFocus > p { margin: 0 0 12px; color: var(--muted); font-size: 11px; }
+.identityFocus ul { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
+.identityFocus li { display: grid; gap: 3px; }
+.identityFocus strong { font-size: 13px; font-weight: 650; }
+.identityFocus li span { color: var(--muted); font-size: 12px; line-height: 1.6; }
 .brief { display: flex; align-items: center; gap: 32px; min-height: 124px; padding: 24px 30px; border: 1px solid #e0eaff; border-radius: 10px; background: linear-gradient(110deg, #eff6ff, #f7faff 65%, #e5efff); overflow: hidden; position: relative; }
 .date { display: flex; align-items: center; gap: 20px; flex-shrink: 0; padding-right: 32px; border-right: 1px solid #d3e2ff; }
 .date strong { font-size: 42px; line-height: 1; letter-spacing: -2px; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -17,7 +35,7 @@
 .feed { padding: 20px; min-width: 0; }
 .newsHeading { display: grid; gap: 6px; }
 .heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.heading h1 { margin: 0; font-size: 20px; font-weight: 750; }
+.heading :is(h1, h2) { margin: 0; font-size: 20px; font-weight: 750; }
 .heading > span { font-size: 10px; padding: 4px 7px; color: var(--accent); border-radius: 4px; background: var(--accent-soft); }
 .refreshNews { margin-left: auto; min-height: 36px; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: #fff; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
 .refreshNews:hover:not(:disabled) { opacity: .9; }
@@ -83,6 +101,9 @@
   .date { padding-right: 20px; }
 }
 @media(max-width:800px) {
+  .identity { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .identityFocus { padding: 16px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .identityFocus ul { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
   .columns { grid-template-columns: 1fr; }
   .sidebar { grid-template-columns: 1fr 1fr; }
   .sidebar .sideCard:last-of-type, .notice { grid-column: 1 / -1; }
@@ -91,6 +112,9 @@
   .date strong { font-size: 34px; }
 }
 @media(max-width:520px) {
+  .identity { padding: 20px; }
+  .identityFocus ul { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .identityActions a { flex: 1 1 130px; }
   .page { width: calc(100% - 28px); margin-top: 14px; }
   .brief { flex-direction: column; align-items: start; gap: 10px; }
   .date { border: 0; }

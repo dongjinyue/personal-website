@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UnsavedChangesProvider from "@/components/admin/UnsavedChangesProvider";
@@ -5,7 +6,18 @@ import { getCurrentUserIdFromClaims, isAdmin } from "@/lib/auth/admin";
 import { getNavigationKnowledgeGroupsForCurrentUser, type KnowledgeNavigationGroup } from "@/lib/knowledge/repository";
 import { getNavigationPublicProjects } from "@/lib/project-repository";
 import { getNavigationPublicTools, getPublicToolCategories } from "@/lib/tool-repository";
+import { siteDescription, siteUrl } from "@/lib/site-metadata";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: { default: "MY SPACE · AI 每日简报", template: "%s | MY SPACE" },
+  description: siteDescription,
+  applicationName: "MY SPACE",
+  openGraph: { type: "website", locale: "zh_CN", siteName: "MY SPACE" },
+  twitter: { card: "summary_large_image", images: ["/opengraph-image"] },
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{

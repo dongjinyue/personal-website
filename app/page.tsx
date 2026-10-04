@@ -1,7 +1,11 @@
 import NewsHome from "@/components/news/NewsHome";
 import { getRecentNews } from "@/lib/news-repository";
+import { createPageMetadata, siteDescription } from "@/lib/site-metadata";
 
-export const metadata = { title: "MY SPACE · AI 每日简报" };
+export const metadata = {
+  ...createPageMetadata("/", "AI 每日简报", siteDescription),
+  title: { absolute: "MY SPACE · AI 每日简报" },
+};
 
 // 首页新闻区域静态渲染，减少客户端请求和布局抖动。
 export const dynamic = "force-static";

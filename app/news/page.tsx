@@ -1,11 +1,23 @@
+import type { Metadata } from "next";
 import NewsHome from "@/components/news/NewsHome";
 import { getNewsPage, getRecentNews, type NewsArticle } from "@/lib/news-repository";
+import { createPageMetadata, getPaginatedPath } from "@/lib/site-metadata";
 
 // 强制每次请求都重新获取数据，避免缓存导致搜索/分类状态不更新。
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Props = { searchParams: Promise<{ page?: string | string[]; category?: string | string[]; q?: string | string[]; startDate?: string | string[]; endDate?: string | string[] }> };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const query = await searchParams;
+  const metadata = createPageMetadata(getPaginatedPath("/news", query.page), "AI 新闻", "浏览 AI 模型、产品、开发技术与行业动态，按分类和日期查找新闻。每条新闻保留原始来源。");
+  // 搜索和筛选组合供用户浏览，避免大量重复结果页被收录。
+  if (query.q || query.category || query.startDate || query.endDate) {
+    metadata.robots = { index: false, follow: true };
+  }
+  return metadata;
+}
 
 export default async function NewsPage({ searchParams }: Props) {
   const query = await searchParams;

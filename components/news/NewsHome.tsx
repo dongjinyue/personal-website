@@ -177,6 +177,27 @@ export default function NewsHome({ articles, expanded = false, pagination, searc
   });
 
   return <main className={styles.page}>
+    {!expanded && (
+      <section className={styles.identity} aria-labelledby="identity-title">
+        <div className={styles.identityCopy}>
+          <p className={styles.identityLabel}>我的个人空间</p>
+          <h1 id="identity-title">记录 AI 变化，也记录自己的实践。</h1>
+          <p className={styles.identityIntro}>我在这里整理学习笔记，尝试 AI 应用与全栈开发，把学到的知识做成可以体验的项目。</p>
+          <div className={styles.identityActions}>
+            <Link className={styles.identityPrimary} href="/projects">查看项目 <span aria-hidden="true">→</span></Link>
+            <Link className={styles.identitySecondary} href="/knowledge">浏览知识库 <span aria-hidden="true">→</span></Link>
+          </div>
+        </div>
+        <div className={styles.identityFocus}>
+          <p>正在关注</p>
+          <ul>
+            <li><strong>AI 应用</strong><span>把想法变成可体验的功能</span></li>
+            <li><strong>知识整理</strong><span>记录概念、方法与实践笔记</span></li>
+            <li><strong>全栈开发</strong><span>连接界面、服务与数据</span></li>
+          </ul>
+        </div>
+      </section>
+    )}
     <section className={styles.brief} aria-label="每日简报">
       <div className={styles.date}><strong>{dateStr}</strong><span><b>AI 每日简报</b></span></div>
       <div className={styles.highlights}><p><span>✦</span>理解技术变化，发现值得关注的新方向。</p><p><span>↗</span>每天几分钟，让信息成为自己的积累。</p></div>
@@ -186,7 +207,7 @@ export default function NewsHome({ articles, expanded = false, pagination, searc
       <section className={styles.feed} aria-labelledby="news-title">
         <div className={styles.newsHeading}>
           <div className={styles.heading}>
-            <h1 id="news-title">AI 新闻</h1>
+            {expanded ? <h1 id="news-title">AI 新闻</h1> : <h2 id="news-title">AI 新闻</h2>}
             <span>采集自公开 RSS 源</span>
             {!expanded && !serverMode && (
               <button

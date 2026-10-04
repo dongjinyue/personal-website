@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicProjectBySlug } from "@/lib/project-repository";
 import { projectStatusLabels } from "@/lib/project-status";
+import { createPageMetadata } from "@/lib/site-metadata";
 import styles from "./page.module.css";
 
 type ProjectDetailPageProps = {
@@ -21,10 +22,7 @@ export async function generateMetadata({
     return { title: "项目不存在", robots: { index: false, follow: false } };
   }
 
-  return {
-    title: `${project.name} | 我的项目`,
-    description: project.description,
-  };
+  return createPageMetadata(`/projects/${encodeURIComponent(slug)}`, project.name, project.description);
 }
 
 export default async function ProjectDetailPage({

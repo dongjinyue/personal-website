@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import styles from "./admin.module.css";
 
 export const metadata: Metadata = {
-  title: { default: "管理后台 | MY SPACE", template: "%s | 管理后台" },
+  title: { default: "管理后台", template: "%s | 管理后台" },
   robots: { index: false, follow: false },
 };
 

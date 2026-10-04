@@ -5,16 +5,21 @@ import KnowledgeCard from "@/components/knowledge/KnowledgeCard";
 import KnowledgeFilters from "@/components/knowledge/KnowledgeFilters";
 import KnowledgeSearch from "@/components/knowledge/KnowledgeSearch";
 import { getKnowledgeListForCurrentUser } from "@/lib/knowledge/repository";
+import { createPageMetadata, getPaginatedPath } from "@/lib/site-metadata";
 import { buildKnowledgeUrl, buildRawKnowledgeUrl } from "@/lib/knowledge/url";
 import { getPaginationItems } from "@/lib/pagination";
 import styles from "../knowledge.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "知识库 | MY SPACE",
-  description: "浏览从 Obsidian 同步的编程、AI 与项目知识笔记。",
-};
+export async function generateMetadata({ searchParams }: PageProps<"/knowledge">): Promise<Metadata> {
+  const query = await searchParams;
+  const metadata = createPageMetadata(getPaginatedPath("/knowledge", query.page), "知识库", "浏览编程、AI 与项目实践的公开知识笔记。");
+  if (Object.keys(query).some((key) => key !== "page" && query[key])) {
+    metadata.robots = { index: false, follow: true };
+  }
+  return metadata;
+}
 
 /**
  * 知识库索引由服务端完成身份判断和筛选，浏览器只会收到当前用户可见的笔记。
