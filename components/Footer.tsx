@@ -15,6 +15,15 @@ export default function Footer() {
             豫ICP备2026046984号-1
           </a>
         </p>
+        <p>
+          <a
+            href="https://beian.mps.gov.cn/#/query/webSearch?code=41010502008067"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            豫公网安备41010502008067号
+          </a>
+        </p>
       </div>
     </footer>
   );
